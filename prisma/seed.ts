@@ -1,4 +1,4 @@
-import "dotenv/config";
+import "../scripts/load-env";
 import { prisma } from "../src/lib/prisma-client";
 
 const proteinsItem = {

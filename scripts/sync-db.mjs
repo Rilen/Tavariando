@@ -1,7 +1,9 @@
-import "dotenv/config";
+import { config } from "dotenv";
 import { spawnSync } from "node:child_process";
 import { resolve } from "node:path";
 import { createClient } from "@libsql/client";
+
+config({ path: [".env.local", ".env"] });
 
 const databaseUrl = process.env.DATABASE_URL;
 const prismaCli = resolve("node_modules/prisma/build/index.js");
