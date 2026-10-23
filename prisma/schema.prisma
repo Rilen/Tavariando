@@ -1,0 +1,39 @@
+generator client {
+  provider        = "prisma-client-js"
+  previewFeatures = ["driverAdapters"]
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+model Participant {
+  id              String           @id @default(cuid())
+  name            String
+  phone           String?
+  confirmed       Boolean          @default(true)
+  dependentsCount Int              @default(0)
+  bringsOwnDrink  Boolean          @default(false)
+  createdAt       DateTime         @default(now())
+  updatedAt       DateTime         @updatedAt
+  assignments     ItemAssignment[]
+}
+
+model FoodItem {
+  id               String           @id @default(cuid())
+  name             String
+  category         String
+  portionPerPerson Float
+  unitMeasure      String
+  assignments      ItemAssignment[]
+}
+
+model ItemAssignment {
+  id            String      @id @default(cuid())
+  participantId String
+  foodItemId    String
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  foodItem      FoodItem    @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
+
+  @@unique([participantId, foodItemId])
+}
