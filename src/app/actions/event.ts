@@ -50,7 +50,29 @@ export type ActionState = {
   participantName?: string;
 };
 
+function emptyDashboardData(): DashboardData {
+  return {
+    stats: {
+      totalPessoas: 0,
+      totalConfirmados: 0,
+      totalItens: 0,
+      itensSemVoluntario: 0,
+    },
+    items: [],
+    participants: [],
+  };
+}
+
 export async function getDashboardData(): Promise<DashboardData> {
+  try {
+    return await fetchDashboardData();
+  } catch (error) {
+    console.error("Falha ao buscar dados do dashboard:", error);
+    return emptyDashboardData();
+  }
+}
+
+async function fetchDashboardData(): Promise<DashboardData> {
   const [participants, foodItems] = await Promise.all([
     prisma.participant.findMany({
       where: { confirmed: true },
