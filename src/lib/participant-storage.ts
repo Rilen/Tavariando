@@ -3,13 +3,26 @@
 import { useEffect, useState } from "react";
 
 export const PARTICIPANT_STORAGE_KEY = "tavariando:participant-id";
+export const PARTICIPANT_TOKEN_STORAGE_KEY = "tavariando:participant-token";
 export const PARTICIPANT_CHANGED_EVENT = "tavariando:participant-changed";
 
-function readStoredParticipantId(): string | null {
+export type ParticipantSession = {
+  participantId: string;
+  participantToken: string;
+};
+
+function readStoredSession(): ParticipantSession | null {
   if (typeof window === "undefined") return null;
 
   try {
-    return window.localStorage.getItem(PARTICIPANT_STORAGE_KEY);
+    const participantId = window.localStorage.getItem(PARTICIPANT_STORAGE_KEY);
+    const participantToken = window.localStorage.getItem(
+      PARTICIPANT_TOKEN_STORAGE_KEY,
+    );
+
+    return participantId && participantToken
+      ? { participantId, participantToken }
+      : null;
   } catch {
     return null;
   }
@@ -31,23 +44,30 @@ function subscribeToParticipantChanges(onChange: () => void) {
   };
 }
 
-export function useParticipantId() {
-  const [participantId, setParticipantId] = useState<string | null | undefined>(
-    undefined,
-  );
+export function useParticipantSession() {
+  const [session, setSession] = useState<
+    ParticipantSession | null | undefined
+  >(undefined);
 
   useEffect(() => {
     return subscribeToParticipantChanges(() => {
-      setParticipantId(readStoredParticipantId());
+      setSession(readStoredSession());
     });
   }, []);
 
-  return participantId;
+  return session;
 }
 
-export function storeParticipantId(participantId: string) {
+export function storeParticipantSession(
+  participantId: string,
+  participantToken: string,
+) {
   try {
     window.localStorage.setItem(PARTICIPANT_STORAGE_KEY, participantId);
+    window.localStorage.setItem(
+      PARTICIPANT_TOKEN_STORAGE_KEY,
+      participantToken,
+    );
   } catch {
     // localStorage may be unavailable in private browsing modes.
   }
@@ -55,9 +75,10 @@ export function storeParticipantId(participantId: string) {
   window.dispatchEvent(new Event(PARTICIPANT_CHANGED_EVENT));
 }
 
-export function clearStoredParticipantId() {
+export function clearStoredParticipantSession() {
   try {
     window.localStorage.removeItem(PARTICIPANT_STORAGE_KEY);
+    window.localStorage.removeItem(PARTICIPANT_TOKEN_STORAGE_KEY);
   } catch {
     // localStorage may be unavailable in private browsing modes.
   }

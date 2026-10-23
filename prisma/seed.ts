@@ -1,5 +1,5 @@
 import "dotenv/config";
-import { prisma } from "../src/lib/prisma";
+import { prisma } from "../src/lib/prisma-client";
 
 const proteinsItem = {
   name: "Proteínas / Carnes (Bovino, Frango, Linguiça)",

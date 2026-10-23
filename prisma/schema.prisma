@@ -18,6 +18,7 @@ model Participant {
   updatedAt       DateTime         @updatedAt
   assignments     ItemAssignment[]
   specialDish     SpecialDish?
+  session         ParticipantSession?
 }
 
 model FoodItem {
@@ -48,4 +49,12 @@ model SpecialDish {
   participant        Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
   replacesFoodItem   FoodItem?  @relation(fields: [replacesFoodItemId], references: [id], onDelete: SetNull)
   createdAt          DateTime   @default(now())
+}
+
+model ParticipantSession {
+  id            String      @id @default(cuid())
+  participantId String      @unique
+  tokenHash     String      @unique
+  createdAt     DateTime    @default(now())
+  participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
 }

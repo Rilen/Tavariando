@@ -13,7 +13,10 @@ import {
   type DashboardItem,
   type DashboardParticipant,
 } from "@/app/actions/event";
-import { clearStoredParticipantId, useParticipantId } from "@/lib/participant-storage";
+import {
+  clearStoredParticipantSession,
+  useParticipantSession,
+} from "@/lib/participant-storage";
 
 type MyQuotaCardProps = {
   participants: DashboardParticipant[];
@@ -26,7 +29,8 @@ export function MyQuotaCard({
   items,
   totalPessoas,
 }: MyQuotaCardProps) {
-  const participantId = useParticipantId();
+  const session = useParticipantSession();
+  const participantId = session?.participantId;
   const [isCancelling, setIsCancelling] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
@@ -39,15 +43,18 @@ export function MyQuotaCard({
     : [];
 
   async function handleCancel() {
-    if (!participant || isCancelling) return;
+    if (!participant || !session?.participantToken || isCancelling) return;
 
     setIsCancelling(true);
     setErrorMessage(null);
 
-    const result = await cancelParticipation(participant.id);
+    const result = await cancelParticipation(
+      participant.id,
+      session.participantToken,
+    );
 
     if (result.status === "success") {
-      clearStoredParticipantId();
+      clearStoredParticipantSession();
     } else {
       setErrorMessage(result.message);
     }

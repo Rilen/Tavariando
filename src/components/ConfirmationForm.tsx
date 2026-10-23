@@ -16,7 +16,10 @@ import {
 } from "@/app/actions/event";
 import { CATEGORY_LABELS, CATEGORY_STYLES, pluralize } from "@/lib/format";
 import { IceReminder } from "@/components/IceReminder";
-import { storeParticipantId, useParticipantId } from "@/lib/participant-storage";
+import {
+  storeParticipantSession,
+  useParticipantSession,
+} from "@/lib/participant-storage";
 
 type ConfirmationFormProps = {
   items: DashboardItem[];
@@ -31,7 +34,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
     initialState,
   );
 
-  const storedParticipantId = useParticipantId();
+  const session = useParticipantSession();
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");
@@ -43,8 +46,12 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
     useState("");
 
   useEffect(() => {
-    if (state.status === "success" && state.participantId) {
-      storeParticipantId(state.participantId);
+    if (
+      state.status === "success" &&
+      state.participantId &&
+      state.participantToken
+    ) {
+      storeParticipantSession(state.participantId, state.participantToken);
     }
   }, [state]);
 
@@ -89,8 +96,27 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
         <input
           type="hidden"
           name="participantId"
-          value={storedParticipantId ?? ""}
+          value={session?.participantId ?? ""}
         />
+        <input
+          type="hidden"
+          name="participantToken"
+          value={session?.participantToken ?? ""}
+        />
+
+        <div
+          aria-hidden="true"
+          className="absolute -left-[9999px] top-auto h-px w-px overflow-hidden"
+        >
+          <label htmlFor="website">Não preencha este campo</label>
+          <input
+            id="website"
+            name="website"
+            type="text"
+            tabIndex={-1}
+            autoComplete="off"
+          />
+        </div>
 
         <div className="grid gap-4 sm:grid-cols-2">
           <div className="space-y-2">
@@ -106,7 +132,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
               type="text"
               required
               minLength={2}
-              maxLength={80}
+              maxLength={60}
               autoComplete="name"
               placeholder="Como a família te chama?"
               value={name}
@@ -331,7 +357,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
               id="special-dish-description"
               name="specialDishDescription"
               rows={2}
-              maxLength={200}
+              maxLength={120}
               value={specialDishDescription}
               onChange={(event) =>
                 setSpecialDishDescription(event.target.value)

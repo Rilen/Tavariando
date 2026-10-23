@@ -1,10 +1,53 @@
 "use server";
 
-import { revalidatePath } from "next/cache";
+import { revalidatePath, revalidateTag } from "next/cache";
 import { prisma } from "@/lib/prisma";
 import { getServingProfile } from "@/lib/servings";
+import { getClientIp } from "@/lib/request-ip";
+import { checkRateLimit } from "@/lib/rate-limit";
+import { DASHBOARD_CACHE_TAG } from "@/lib/cache-tags";
+import {
+  generateSessionToken,
+  hashSessionToken,
+  verifySessionToken,
+} from "@/lib/session-token";
+import {
+  firstValidationMessage,
+  participantIdSchema,
+  participantInputSchema,
+  sessionTokenSchema,
+} from "@/lib/validation";
 
-const CATEGORY_ORDER = ["COMIDA", "BEBIDA", "SOBREMESA", "DESCARTAVEL"];
+
+const RATE_LIMIT_MESSAGE =
+  "Muitas tentativas em pouco tempo. Aguarde um minuto e tente novamente.";
+
+class ItemCapacityError extends Error {
+  constructor(readonly itemName: string) {
+    super(
+      `O item "${itemName}" já está com o número suficiente de voluntários.`,
+    );
+    this.name = "ItemCapacityError";
+  }
+}
+
+class UnauthorizedSessionError extends Error {
+  constructor() {
+    super("Sessão inválida ou expirada.");
+    this.name = "UnauthorizedSessionError";
+  }
+}
+
+function getFormString(formData: FormData, key: string): string {
+  const value = formData.get(key);
+  return typeof value === "string" ? value : "";
+}
+
+function getFormStringArray(formData: FormData, key: string): string[] {
+  return formData
+    .getAll(key)
+    .filter((value): value is string => typeof value === "string");
+}
 
 export type DashboardVolunteer = {
   participantId: string;
@@ -67,298 +110,193 @@ export type ActionState = {
   message: string;
   participantId?: string;
   participantName?: string;
+  participantToken?: string;
 };
-
-function emptyDashboardData(): DashboardData {
-  return {
-    stats: {
-      totalPessoas: 0,
-      totalConfirmados: 0,
-      totalItens: 0,
-      itensSemVoluntario: 0,
-      itensGarantidos: 0,
-    },
-    items: [],
-    participants: [],
-    specialDishes: [],
-  };
-}
-
-export async function getDashboardData(): Promise<DashboardData> {
-  try {
-    return await fetchDashboardData();
-  } catch (error) {
-    console.error("Falha ao buscar dados do dashboard:", error);
-    return emptyDashboardData();
-  }
-}
-
-async function fetchDashboardData(): Promise<DashboardData> {
-  const [participants, foodItems] = await Promise.all([
-    prisma.participant.findMany({
-      where: { confirmed: true },
-      orderBy: { createdAt: "asc" },
-      select: {
-        id: true,
-        name: true,
-        dependentsCount: true,
-        bringsOwnDrink: true,
-        specialDish: {
-          select: {
-            id: true,
-            description: true,
-            replacesFoodItemId: true,
-            replacesFoodItem: { select: { name: true } },
-          },
-        },
-        assignments: {
-          select: { foodItemId: true },
-        },
-      },
-    }),
-    prisma.foodItem.findMany({
-      orderBy: { name: "asc" },
-      select: {
-        id: true,
-        name: true,
-        category: true,
-        portionPerPerson: true,
-        unitMeasure: true,
-        assignments: {
-          select: {
-            participantId: true,
-            participant: {
-              select: {
-                name: true,
-                confirmed: true,
-                specialDish: { select: { replacesFoodItemId: true } },
-              },
-            },
-          },
-        },
-      },
-    }),
-  ]);
-
-  const totalPessoas = participants.reduce(
-    (total, participant) => total + 1 + participant.dependentsCount,
-    0,
-  );
-
-  const items = foodItems
-    .map((item) => {
-      const profile = getServingProfile(item);
-      const confirmedAssignments = item.assignments.filter(
-        (assignment) =>
-          assignment.participant.confirmed &&
-          assignment.participant.specialDish?.replacesFoodItemId !== item.id,
-      );
-      const qtdVoluntarios = confirmedAssignments.length;
-      const suggestedServings =
-        totalPessoas > 0 ? Math.ceil(totalPessoas / profile.servesPeople) : 0;
-      const missingServings = Math.max(0, suggestedServings - qtdVoluntarios);
-
-      return {
-        id: item.id,
-        name: item.name,
-        category: item.category,
-        servingLabel: profile.label,
-        servingLabelPlural: profile.pluralLabel,
-        servesPeople: profile.servesPeople,
-        servesDescription: profile.servesDescription,
-        suggestedServings,
-        missingServings,
-        isEnough: suggestedServings > 0 && qtdVoluntarios >= suggestedServings,
-        qtdVoluntarios,
-        volunteers: confirmedAssignments.map((assignment) => ({
-          participantId: assignment.participantId,
-          name: assignment.participant.name,
-        })),
-      };
-    })
-    .sort((a, b) => {
-      const categoryDiff =
-        CATEGORY_ORDER.indexOf(a.category) - CATEGORY_ORDER.indexOf(b.category);
-
-      if (categoryDiff !== 0) return categoryDiff;
-
-      return a.name.localeCompare(b.name, "pt-BR");
-    });
-
-  const specialDishes = participants.flatMap((participant) =>
-    participant.specialDish
-      ? [
-          {
-            id: participant.specialDish.id,
-            participantId: participant.id,
-            participantName: participant.name,
-            description: participant.specialDish.description,
-            replacesItemId: participant.specialDish.replacesFoodItemId,
-            replacesItemName:
-              participant.specialDish.replacesFoodItem?.name ?? null,
-          },
-        ]
-      : [],
-  );
-
-  return {
-    stats: {
-      totalPessoas,
-      totalConfirmados: participants.length,
-      totalItens: items.length,
-      itensSemVoluntario: items.filter((item) => item.qtdVoluntarios === 0)
-        .length,
-      itensGarantidos: items.filter((item) => item.isEnough).length,
-    },
-    items,
-    participants: participants.map((participant) => ({
-      id: participant.id,
-      name: participant.name,
-      dependentsCount: participant.dependentsCount,
-      peopleCount: 1 + participant.dependentsCount,
-      bringsOwnDrink: participant.bringsOwnDrink,
-      itemIds: participant.assignments.map(
-        (assignment) => assignment.foodItemId,
-      ),
-      specialDish: participant.specialDish
-        ? {
-            description: participant.specialDish.description,
-            replacesItemId: participant.specialDish.replacesFoodItemId,
-            replacesItemName:
-              participant.specialDish.replacesFoodItem?.name ?? null,
-          }
-        : null,
-    })),
-    specialDishes,
-  };
-}
 
 export async function registerOrUpdateParticipant(
   prevStateOrFormData: ActionState | FormData,
   maybeFormData?: FormData,
 ): Promise<ActionState> {
-  const formData =
-    maybeFormData ?? (prevStateOrFormData as FormData);
+  const formData = maybeFormData ?? (prevStateOrFormData as FormData);
+  const clientIp = await getClientIp();
+  const rateLimit = checkRateLimit(`register:${clientIp}`, {
+    limit: 5,
+    windowMs: 60_000,
+  });
 
-  const name = String(formData.get("name") ?? "").trim();
-  const phone = String(formData.get("phone") ?? "").trim();
-  const dependentsCount = Number.parseInt(
-    String(formData.get("dependentsCount") ?? "0"),
-    10,
-  );
-  const bringsOwnDrink =
-    formData.get("bringsOwnDrink") === "on" ||
-    formData.get("bringsOwnDrink") === "true";
-  const rawParticipantId = String(formData.get("participantId") ?? "").trim();
-  const participantId = rawParticipantId || null;
-  const specialDishDescription = String(
-    formData.get("specialDishDescription") ?? "",
-  ).trim();
-  const rawSpecialDishReplacesItemId = String(
-    formData.get("specialDishReplacesItemId") ?? "",
-  ).trim();
-  const specialDishReplacesItemId = rawSpecialDishReplacesItemId || null;
-
-  const selectedFoodItemIds = [
-    ...new Set(
-      formData
-        .getAll("selectedFoodItemIds")
-        .filter(
-          (value): value is string =>
-            typeof value === "string" && value.length > 0,
-        ),
-    ),
-  ];
-
-  if (name.length < 2) {
-    return {
-      status: "error",
-      message: "Informe seu nome com pelo menos 2 caracteres.",
-    };
+  if (!rateLimit.allowed) {
+    return { status: "error", message: RATE_LIMIT_MESSAGE };
   }
 
-  if (name.length > 80) {
-    return {
-      status: "error",
-      message: "O nome pode ter no máximo 80 caracteres.",
-    };
+  if (getFormString(formData, "website").trim().length > 0) {
+    return { status: "success", message: "Confirmação recebida." };
   }
 
-  if (
-    !Number.isInteger(dependentsCount) ||
-    dependentsCount < 0 ||
-    dependentsCount > 10
-  ) {
-    return {
-      status: "error",
-      message: "A quantidade de acompanhantes deve ficar entre 0 e 10.",
-    };
+  const parsed = participantInputSchema.safeParse({
+    name: getFormString(formData, "name"),
+    phone: getFormString(formData, "phone"),
+    dependentsCount: getFormString(formData, "dependentsCount") || "0",
+    bringsOwnDrink:
+      formData.get("bringsOwnDrink") === "on" ||
+      formData.get("bringsOwnDrink") === "true",
+    participantId: getFormString(formData, "participantId").trim() || null,
+    participantToken: getFormString(formData, "participantToken").trim() || null,
+    specialDishDescription: getFormString(formData, "specialDishDescription"),
+    specialDishReplacesItemId:
+      getFormString(formData, "specialDishReplacesItemId").trim() || null,
+    selectedFoodItemIds: getFormStringArray(formData, "selectedFoodItemIds"),
+  });
+
+  if (!parsed.success) {
+    return { status: "error", message: firstValidationMessage(parsed.error) };
   }
 
-  if (specialDishDescription.length > 200) {
-    return {
-      status: "error",
-      message: "A descrição do prato adicional pode ter no máximo 200 caracteres.",
-    };
-  }
+  const {
+    name,
+    phone,
+    dependentsCount,
+    bringsOwnDrink,
+    participantId,
+    participantToken,
+    specialDishDescription,
+    specialDishReplacesItemId,
+    selectedFoodItemIds,
+  } = parsed.data;
 
-  if (specialDishReplacesItemId && !specialDishDescription) {
-    return {
-      status: "error",
-      message:
-        "Descreva o prato adicional, doce, fruta ou petisco que você vai levar para indicar qual item ele substitui.",
-    };
-  }
+  const effectiveSelectedFoodItemIds = specialDishReplacesItemId
+    ? selectedFoodItemIds.filter((id) => id !== specialDishReplacesItemId)
+    : selectedFoodItemIds;
 
   try {
-    if (specialDishReplacesItemId) {
-      const replacementItem = await prisma.foodItem.findUnique({
-        where: { id: specialDishReplacesItemId },
-        select: { id: true },
-      });
+    const requestedItemIds = [
+      ...new Set([
+        ...effectiveSelectedFoodItemIds,
+        ...(specialDishReplacesItemId ? [specialDishReplacesItemId] : []),
+      ]),
+    ];
 
-      if (!replacementItem) {
-        return {
-          status: "error",
-          message: "O prato que você quer substituir não foi encontrado.",
-        };
-      }
+    const existingItems = requestedItemIds.length
+      ? await prisma.foodItem.findMany({
+          where: { id: { in: requestedItemIds } },
+          select: { id: true },
+        })
+      : [];
+    const existingItemIds = new Set(existingItems.map((item) => item.id));
+
+    if (
+      specialDishReplacesItemId &&
+      !existingItemIds.has(specialDishReplacesItemId)
+    ) {
+      return {
+        status: "error",
+        message: "O prato que você quer substituir não foi encontrado.",
+      };
     }
 
-    const effectiveSelectedFoodItemIds = specialDishReplacesItemId
-      ? selectedFoodItemIds.filter((id) => id !== specialDishReplacesItemId)
-      : selectedFoodItemIds;
+    if (effectiveSelectedFoodItemIds.some((id) => !existingItemIds.has(id))) {
+      return {
+        status: "error",
+        message: "Um ou mais itens selecionados não estão mais disponíveis.",
+      };
+    }
 
-    const participant = await prisma.$transaction(async (tx) => {
+    const result = await prisma.$transaction(async (tx) => {
+      let savedParticipant: { id: string; name: string };
+
+      if (participantId) {
+        const existingParticipant = await tx.participant.findUnique({
+          where: { id: participantId },
+          select: {
+            id: true,
+            session: { select: { tokenHash: true } },
+          },
+        });
+
+        if (
+          !existingParticipant ||
+          !participantToken ||
+          !existingParticipant.session ||
+          !verifySessionToken(
+            participantToken,
+            existingParticipant.session.tokenHash,
+          )
+        ) {
+          throw new UnauthorizedSessionError();
+        }
+
+        savedParticipant = await tx.participant.update({
+          where: { id: existingParticipant.id },
+          data: {
+            name,
+            phone,
+            dependentsCount,
+            bringsOwnDrink,
+            confirmed: true,
+          },
+        });
+      } else {
+        savedParticipant = await tx.participant.create({
+          data: {
+            name,
+            phone,
+            dependentsCount,
+            bringsOwnDrink,
+            confirmed: true,
+          },
+        });
+      }
+
       const validItems = effectiveSelectedFoodItemIds.length
         ? await tx.foodItem.findMany({
             where: { id: { in: effectiveSelectedFoodItemIds } },
-            select: { id: true },
+            select: {
+              id: true,
+              name: true,
+              category: true,
+              unitMeasure: true,
+            },
           })
         : [];
 
-      const participantById = participantId
-        ? await tx.participant.findUnique({ where: { id: participantId } })
-        : null;
+      if (validItems.length > 0) {
+        const confirmedParticipants = await tx.participant.findMany({
+          where: { confirmed: true },
+          select: { dependentsCount: true },
+        });
+        const totalPessoas = confirmedParticipants.reduce(
+          (total, current) => total + 1 + current.dependentsCount,
+          0,
+        );
 
-      const existingParticipant =
-        participantById ??
-        (await tx.participant.findFirst({ where: { name } }));
+        const otherAssignments = await tx.itemAssignment.findMany({
+          where: {
+            foodItemId: { in: validItems.map((item) => item.id) },
+            participantId: { not: savedParticipant.id },
+            participant: { confirmed: true },
+          },
+          select: { foodItemId: true },
+        });
 
-      const data = {
-        name,
-        phone: phone || null,
-        dependentsCount,
-        bringsOwnDrink,
-        confirmed: true,
-      };
+        const assignmentCounts = new Map<string, number>();
+        for (const assignment of otherAssignments) {
+          assignmentCounts.set(
+            assignment.foodItemId,
+            (assignmentCounts.get(assignment.foodItemId) ?? 0) + 1,
+          );
+        }
 
-      const savedParticipant = existingParticipant
-        ? await tx.participant.update({
-            where: { id: existingParticipant.id },
-            data,
-          })
-        : await tx.participant.create({ data });
+        for (const item of validItems) {
+          const profile = getServingProfile(item);
+          const capacity = Math.max(
+            1,
+            Math.ceil(totalPessoas / profile.servesPeople),
+          );
+
+          if ((assignmentCounts.get(item.id) ?? 0) + 1 > capacity) {
+            throw new ItemCapacityError(item.name);
+          }
+        }
+      }
 
       await tx.itemAssignment.deleteMany({
         where: { participantId: savedParticipant.id },
@@ -392,18 +330,51 @@ export async function registerOrUpdateParticipant(
         });
       }
 
-      return savedParticipant;
+      const sessionToken = generateSessionToken();
+      await tx.participantSession.upsert({
+        where: { participantId: savedParticipant.id },
+        create: {
+          participantId: savedParticipant.id,
+          tokenHash: hashSessionToken(sessionToken),
+        },
+        update: {
+          tokenHash: hashSessionToken(sessionToken),
+        },
+      });
+
+      return { participant: savedParticipant, sessionToken };
     });
 
-    revalidatePath("/");
+    try {
+      revalidatePath("/");
+      revalidateTag(DASHBOARD_CACHE_TAG, { expire: 0 });
+    } catch (error) {
+      console.error("Falha ao invalidar o cache do dashboard:", error);
+    }
 
     return {
       status: "success",
-      message: `Tudo certo, ${participant.name}! Sua confirmação foi registrada.`,
-      participantId: participant.id,
-      participantName: participant.name,
+      message: `Tudo certo, ${result.participant.name}! Sua confirmação foi registrada.`,
+      participantId: result.participant.id,
+      participantName: result.participant.name,
+      participantToken: result.sessionToken,
     };
   } catch (error) {
+    if (error instanceof ItemCapacityError) {
+      return {
+        status: "error",
+        message: `${error.message} Escolha outro item ou ajuste sua seleção.`,
+      };
+    }
+
+    if (error instanceof UnauthorizedSessionError) {
+      return {
+        status: "error",
+        message:
+          "Sua sessão expirou ou não pôde ser validada. Atualize a página e confirme novamente.",
+      };
+    }
+
     console.error("Erro ao registrar participante:", error);
 
     return {
@@ -416,27 +387,59 @@ export async function registerOrUpdateParticipant(
 
 export async function cancelParticipation(
   participantId: string,
+  participantToken: string,
 ): Promise<ActionState> {
-  if (!participantId) {
+  const clientIp = await getClientIp();
+  const rateLimit = checkRateLimit(`cancel:${clientIp}`, {
+    limit: 10,
+    windowMs: 60_000,
+  });
+
+  if (!rateLimit.allowed) {
+    return { status: "error", message: RATE_LIMIT_MESSAGE };
+  }
+
+  const parsedId = participantIdSchema.safeParse(participantId);
+  const parsedToken = sessionTokenSchema.safeParse(participantToken);
+
+  if (!parsedId.success || !parsedToken.success) {
     return {
       status: "error",
-      message: "Não encontramos sua confirmação.",
+      message:
+        "Não foi possível validar sua sessão. Atualize a página e tente novamente.",
     };
   }
 
   try {
     const cancelledParticipant = await prisma.$transaction(async (tx) => {
       const participant = await tx.participant.findUnique({
-        where: { id: participantId },
-        select: { id: true, name: true },
+        where: { id: parsedId.data },
+        select: {
+          id: true,
+          name: true,
+          session: { select: { tokenHash: true } },
+        },
       });
 
-      if (!participant) return null;
+      if (
+        !participant ||
+        !participant.session ||
+        !verifySessionToken(parsedToken.data, participant.session.tokenHash)
+      ) {
+        return null;
+      }
 
-      await tx.itemAssignment.deleteMany({ where: { participantId } });
-      await tx.specialDish.deleteMany({ where: { participantId } });
+      await tx.itemAssignment.deleteMany({
+        where: { participantId: parsedId.data },
+      });
+      await tx.specialDish.deleteMany({
+        where: { participantId: parsedId.data },
+      });
+      await tx.participantSession.deleteMany({
+        where: { participantId: parsedId.data },
+      });
       await tx.participant.update({
-        where: { id: participantId },
+        where: { id: parsedId.data },
         data: { confirmed: false },
       });
 
@@ -446,11 +449,17 @@ export async function cancelParticipation(
     if (!cancelledParticipant) {
       return {
         status: "error",
-        message: "Não encontramos sua confirmação.",
+        message:
+          "Não foi possível validar sua sessão. Atualize a página e tente novamente.",
       };
     }
 
-    revalidatePath("/");
+    try {
+      revalidatePath("/");
+      revalidateTag(DASHBOARD_CACHE_TAG, { expire: 0 });
+    } catch (error) {
+      console.error("Falha ao invalidar o cache do dashboard:", error);
+    }
 
     return {
       status: "success",

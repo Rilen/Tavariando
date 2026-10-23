@@ -1,7 +1,7 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
 import { HeartHandshake, ListChecks, Loader2, Users } from "lucide-react";
-import { getDashboardData } from "@/app/actions/event";
+import { getDashboardData } from "@/lib/dashboard-data";
 import { ConfirmationForm } from "@/components/ConfirmationForm";
 import { DashboardItems } from "@/components/DashboardItems";
 import { HeaderStats } from "@/components/HeaderStats";
