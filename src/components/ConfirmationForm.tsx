@@ -76,17 +76,17 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
   return (
     <section
       id="confirmacao"
-      className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-900/5 sm:p-7 dark:border-zinc-800 dark:bg-zinc-900"
+      className="rounded-3xl border border-orange-100 bg-white p-5 shadow-sm shadow-orange-950/5 sm:p-7 dark:border-orange-900 dark:bg-orange-950"
     >
       <div className="mb-6 flex items-start gap-3">
         <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-amber-300">
           <UserPlus className="size-5" aria-hidden="true" />
         </span>
         <div>
-          <h2 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+          <h2 className="text-lg font-bold tracking-tight text-orange-950">
             Confirme sua presença
           </h2>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-neutral-500 dark:text-neutral-400">
             Diga com quem você vem e assuma um ou mais itens do cardápio.
           </p>
         </div>
@@ -122,7 +122,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
           <div className="space-y-2">
             <label
               htmlFor="participant-name"
-              className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              className="text-sm font-medium text-neutral-700 dark:text-neutral-300"
             >
               Nome
             </label>
@@ -137,17 +137,17 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
               placeholder="Como a família te chama?"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-amber-400"
+              className="w-full rounded-xl border border-orange-200 bg-orange-50/50 px-3.5 py-2.5 text-sm text-neutral-900 shadow-sm outline-none transition placeholder:text-neutral-400 focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/20"
             />
           </div>
 
           <div className="space-y-2">
             <label
               htmlFor="participant-phone"
-              className="text-sm font-medium text-zinc-700 dark:text-zinc-300"
+              className="text-sm font-medium text-neutral-700 dark:text-neutral-300"
             >
               WhatsApp{" "}
-              <span className="font-normal text-zinc-400 dark:text-zinc-500">
+              <span className="font-normal text-neutral-400 dark:text-neutral-500">
                 (opcional)
               </span>
             </label>
@@ -160,16 +160,16 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
               placeholder="(11) 99999-9999"
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
-              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-amber-400"
+              className="w-full rounded-xl border border-orange-200 bg-orange-50/50 px-3.5 py-2.5 text-sm text-neutral-900 shadow-sm outline-none transition placeholder:text-neutral-400 focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/20"
             />
           </div>
         </div>
 
         <fieldset className="space-y-2">
-          <legend className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          <legend className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
             Acompanhantes
           </legend>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
             Inclua crianças e outros adultos que vêm com você.
           </p>
           <div className="grid grid-cols-6 gap-2">
@@ -182,7 +182,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
                   className={`cursor-pointer rounded-xl border px-1 py-2.5 text-center text-sm font-semibold transition ${
                     isSelected
                       ? "border-orange-400 bg-orange-500 text-white shadow-sm"
-                      : "border-zinc-300 bg-white text-zinc-600 hover:border-amber-400 hover:text-orange-700 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-orange-500 dark:hover:text-amber-300"
+                      : "border-orange-200 bg-orange-50/70 text-neutral-700 hover:bg-orange-100"
                   }`}
                 >
                   <input
@@ -198,14 +198,14 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
               );
             })}
           </div>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
             {dependentsCount === 0
               ? "Você vem sozinho(a)."
               : `Sua turma soma ${pluralize(dependentsCount + 1, "pessoa", "pessoas")}.`}
           </p>
         </fieldset>
 
-        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 transition hover:border-amber-300 dark:border-zinc-800 dark:bg-zinc-950/60 dark:hover:border-orange-700">
+        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-orange-100 bg-orange-50/50 p-4 transition hover:border-amber-300 dark:border-orange-900 dark:bg-orange-950/60 dark:hover:border-orange-700">
           <input
             type="checkbox"
             name="bringsOwnDrink"
@@ -217,17 +217,17 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
             className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border transition ${
               bringsOwnDrink
                 ? "border-orange-500 bg-orange-500 text-white"
-                : "border-zinc-300 bg-white text-transparent dark:border-zinc-600 dark:bg-zinc-900"
+                : "border-orange-200 bg-white text-transparent dark:border-orange-700 dark:bg-orange-950"
             }`}
           >
             <Check className="size-3.5" aria-hidden="true" />
           </span>
           <span>
-            <span className="flex items-center gap-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
+            <span className="flex items-center gap-2 text-sm font-medium text-neutral-800 dark:text-neutral-100">
               <Wine className="size-4 text-orange-600 dark:text-amber-400" aria-hidden="true" />
               Vou levar minha própria bebida
             </span>
-            <span className="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-400">
+            <span className="mt-0.5 block text-xs text-neutral-500 dark:text-neutral-400">
               Cooler ou térmica individual, para não pesar no rateio.
             </span>
           </span>
@@ -236,10 +236,10 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
         <IceReminder />
 
         <fieldset className="space-y-3">
-          <legend className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
+          <legend className="text-sm font-medium text-neutral-700 dark:text-neutral-300">
             O que você pode levar?
           </legend>
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
             Marque um ou mais itens. As cotas são recalculadas automaticamente
             conforme novas confirmações chegam.
           </p>
@@ -254,7 +254,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
                   className={`group flex cursor-pointer flex-col gap-3 rounded-2xl border p-4 transition ${
                     isSelected
                       ? "border-orange-500 bg-orange-50 shadow-sm dark:border-orange-500/70 dark:bg-orange-500/10"
-                      : "border-zinc-200 bg-white hover:border-amber-300 hover:bg-orange-50/40 dark:border-zinc-800 dark:bg-zinc-950/40 dark:hover:border-orange-700 dark:hover:bg-orange-500/5"
+                      : "border-orange-100 bg-white hover:border-amber-300 hover:bg-orange-50/40 dark:border-orange-900 dark:bg-orange-950/40 dark:hover:border-orange-700 dark:hover:bg-orange-500/5"
                   }`}
                 >
                   <span className="flex items-start justify-between gap-3">
@@ -263,17 +263,17 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
                         className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border transition ${
                           isSelected
                             ? "border-orange-500 bg-orange-500 text-white"
-                            : "border-zinc-300 bg-white text-transparent group-hover:border-amber-400 dark:border-zinc-600 dark:bg-zinc-900"
+                            : "border-orange-200 bg-white text-transparent group-hover:border-amber-400 dark:border-orange-700 dark:bg-orange-950"
                         }`}
                       >
                         <Check className="size-3.5" aria-hidden="true" />
                       </span>
                       <span>
-                        <span className="block text-sm font-semibold leading-snug text-zinc-900 dark:text-zinc-50">
+                        <span className="block text-sm font-semibold leading-snug text-orange-950">
                           {item.name}
                         </span>
-                        <span className="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-400">
-                          <strong className="font-semibold text-zinc-700 dark:text-zinc-300">
+                        <span className="mt-0.5 block text-xs text-neutral-500 dark:text-neutral-400">
+                          <strong className="font-semibold text-neutral-700 dark:text-neutral-300">
                             1 {item.servingLabel}
                           </strong>{" "}
                           ({item.servesDescription})
@@ -295,12 +295,12 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
                     <span
                       className={`rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                         CATEGORY_STYLES[item.category] ??
-                        "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                        "bg-orange-100 text-neutral-700 dark:bg-orange-900 dark:text-neutral-300"
                       }`}
                     >
                       {CATEGORY_LABELS[item.category] ?? item.category}
                     </span>
-                    <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300">
+                    <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-medium text-neutral-700 dark:bg-orange-900 dark:text-neutral-300">
                       {pluralize(
                         item.qtdVoluntarios,
                         "voluntário",
@@ -319,7 +319,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
                           : item.servingLabelPlural}
                       </span>
                     ) : (
-                      <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                      <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-medium text-neutral-500 dark:bg-orange-900 dark:text-neutral-400">
                         Aguardando confirmações
                       </span>
                     )}
@@ -330,7 +330,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
           </div>
 
           {items.length === 0 && (
-            <p className="rounded-xl border border-dashed border-zinc-300 p-4 text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+            <p className="rounded-xl border border-dashed border-orange-200 p-4 text-sm text-neutral-500 dark:border-orange-800 dark:text-neutral-400">
               Nenhum item disponível ainda. Avise a organização!
             </p>
           )}
@@ -363,7 +363,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
                 setSpecialDishDescription(event.target.value)
               }
               placeholder="(Ex: Salpicão, pipoca, bolo, pavê, torta, melancia, etc.)"
-              className="w-full resize-y rounded-xl border border-amber-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 dark:border-amber-500/40 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-amber-400"
+              className="w-full resize-y rounded-xl border border-orange-200 bg-orange-50/50 px-3.5 py-2.5 text-sm text-neutral-900 shadow-sm outline-none transition placeholder:text-neutral-400 focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/20"
             />
           </div>
 
@@ -381,7 +381,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
               onChange={(event) =>
                 handleReplacementChange(event.target.value)
               }
-              className="w-full rounded-xl border border-amber-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 dark:border-amber-500/40 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-amber-400"
+              className="w-full rounded-xl border border-orange-200 bg-orange-50/50 px-3.5 py-2.5 text-sm text-neutral-900 shadow-sm outline-none transition focus:border-orange-500 focus:bg-white focus:ring-2 focus:ring-orange-500/20"
             >
               <option value="">Não, é adicional</option>
               {items.map((item) => (
@@ -417,7 +417,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
         )}
 
         <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-zinc-500 dark:text-zinc-400">
+          <p className="text-xs text-neutral-500 dark:text-neutral-400">
             Você pode voltar depois para atualizar sua escolha.
           </p>
           <button

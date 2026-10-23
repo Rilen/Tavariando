@@ -94,7 +94,7 @@ export function HeaderStats({ stats }: HeaderStatsProps) {
           </p>
         </div>
 
-        <div className="hidden shrink-0 rounded-2xl border border-amber-400/30 bg-orange-950/50 p-2 text-amber-100 shadow-2xl backdrop-blur-sm md:block">
+        <div className="hidden shrink-0 rounded-2xl border border-amber-300/40 bg-orange-950/40 p-2 text-amber-100 shadow-xl backdrop-blur-sm md:block">
           <div className="relative h-[300px] w-[201px] overflow-hidden rounded-xl">
             <Image
               src="/herminio_evangelina.jpg"

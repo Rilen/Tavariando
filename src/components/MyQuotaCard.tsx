@@ -64,23 +64,23 @@ export function MyQuotaCard({
 
   if (!participant) {
     return (
-      <section className="rounded-3xl border border-orange-200 bg-orange-50/70 p-6 dark:border-orange-500/30 dark:bg-orange-500/10">
+      <section className="rounded-3xl border border-orange-100 bg-white p-6 shadow-md shadow-orange-950/5">
         <div className="flex items-start gap-3">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white text-orange-700 shadow-sm dark:bg-zinc-900 dark:text-amber-300">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-orange-700">
             <Utensils className="size-5" aria-hidden="true" />
           </span>
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold tracking-tight text-orange-950 dark:text-orange-50">
+            <h2 className="text-lg font-bold tracking-tight text-orange-950">
               Sua cota personalizada
             </h2>
-            <p className="text-sm leading-relaxed text-amber-950/80 dark:text-orange-100/80">
+            <p className="text-sm leading-relaxed text-neutral-700">
               {participantId
                 ? "Não encontramos sua confirmação. Ela pode ter sido cancelada — preencha o formulário ao lado para entrar de novo."
                 : "Confirme sua presença ao lado. Depois, este espaço mostra exatamente o que você ficou responsável por levar."}
             </p>
             <a
               href="#confirmacao"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-orange-800 underline-offset-4 hover:underline dark:text-amber-300"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-orange-700 underline-offset-4 hover:underline"
             >
               Ir para a confirmação
             </a>

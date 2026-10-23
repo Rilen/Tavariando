@@ -12,7 +12,7 @@ export const CATEGORY_STYLES: Record<string, string> = {
   SOBREMESA:
     "bg-orange-100 text-orange-800 dark:bg-orange-500/15 dark:text-orange-300",
   DESCARTAVEL:
-    "bg-zinc-200 text-zinc-700 dark:bg-zinc-700/60 dark:text-zinc-300",
+    "bg-orange-100 text-neutral-700 dark:bg-orange-900/60 dark:text-neutral-300",
 };
 
 const numberFormatter = new Intl.NumberFormat("pt-BR", {

@@ -29,8 +29,8 @@ async function Dashboard() {
             totalPessoas={data.stats.totalPessoas}
           />
 
-          <section className="rounded-3xl border border-zinc-200 bg-white p-6 shadow-sm shadow-zinc-900/5 dark:border-zinc-800 dark:bg-zinc-900">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-zinc-500 dark:text-zinc-400">
+          <section className="rounded-3xl border border-orange-100 bg-white p-6 shadow-md shadow-orange-950/5 dark:border-orange-900 dark:bg-orange-950">
+            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-orange-950/70">
               Como funciona
             </h2>
             <ol className="mt-4 space-y-4">
@@ -38,7 +38,7 @@ async function Dashboard() {
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-amber-300">
                   <Users className="size-4" aria-hidden="true" />
                 </span>
-                <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
+                <p className="text-sm leading-relaxed text-neutral-700">
                   Confirme presença e informe quantas pessoas vêm com você.
                 </p>
               </li>
@@ -46,7 +46,7 @@ async function Dashboard() {
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
                   <ListChecks className="size-4" aria-hidden="true" />
                 </span>
-                <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
+                <p className="text-sm leading-relaxed text-neutral-700">
                   Escolha a travessa ou porção que pode levar. Cada item pode
                   ter vários voluntários.
                 </p>
@@ -55,7 +55,7 @@ async function Dashboard() {
                 <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
                   <HeartHandshake className="size-4" aria-hidden="true" />
                 </span>
-                <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
+                <p className="text-sm leading-relaxed text-neutral-700">
                   A cota de cada família é recalculada automaticamente. Todo
                   mundo leva uma travessa, ninguém leva tudo. Gostosuras, frutas
                   e petiscos entram na mesa compartilhada.
@@ -78,16 +78,16 @@ async function Dashboard() {
 function DashboardSkeleton() {
   return (
     <div className="animate-pulse space-y-6" aria-hidden="true">
-      <div className="h-72 rounded-3xl bg-zinc-200 dark:bg-zinc-800" />
+      <div className="h-72 rounded-3xl bg-orange-100/70 dark:bg-orange-900" />
       <div className="grid gap-6 lg:grid-cols-5">
-        <div className="h-[34rem] rounded-3xl bg-zinc-200 lg:col-span-3 dark:bg-zinc-800" />
+        <div className="h-[34rem] rounded-3xl bg-orange-100/70 lg:col-span-3 dark:bg-orange-900" />
         <div className="space-y-6 lg:col-span-2">
-          <div className="h-60 rounded-3xl bg-zinc-200 dark:bg-zinc-800" />
-          <div className="h-64 rounded-3xl bg-zinc-200 dark:bg-zinc-800" />
+          <div className="h-60 rounded-3xl bg-orange-100/70 dark:bg-orange-900" />
+          <div className="h-64 rounded-3xl bg-orange-100/70 dark:bg-orange-900" />
         </div>
       </div>
-      <div className="h-72 rounded-3xl bg-zinc-200 dark:bg-zinc-800" />
-      <div className="h-56 rounded-3xl bg-zinc-200 dark:bg-zinc-800" />
+      <div className="h-72 rounded-3xl bg-orange-100/70 dark:bg-orange-900" />
+      <div className="h-56 rounded-3xl bg-orange-100/70 dark:bg-orange-900" />
     </div>
   );
 }
@@ -115,7 +115,7 @@ export default function Home() {
         <Dashboard />
       </Suspense>
 
-      <footer className="mt-10 text-center text-xs text-zinc-500 dark:text-zinc-400">
+      <footer className="mt-10 text-center text-xs text-neutral-500 dark:text-neutral-400">
         Feito com carinho para a família Tavariando. Qualquer dúvida, fale com
         a organização.
       </footer>

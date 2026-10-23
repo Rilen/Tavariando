@@ -16,17 +16,17 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
   return (
     <section
       id="cardapio"
-      className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-900/5 sm:p-7 dark:border-zinc-800 dark:bg-zinc-900"
+      className="rounded-3xl border border-orange-100 bg-white p-5 shadow-sm shadow-orange-950/5 sm:p-7 dark:border-orange-900 dark:bg-orange-950"
     >
       <div className="mb-6 flex items-start gap-3">
         <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
           <ClipboardList className="size-5" aria-hidden="true" />
         </span>
         <div>
-          <h2 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+          <h2 className="text-lg font-bold tracking-tight text-orange-950">
             Pratos Básicos Garantidos
           </h2>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-neutral-700">
             Status das travessas para{" "}
             {pluralize(totalPessoas, "pessoa", "pessoas")}. Cada família leva
             uma porção familiar; ninguém precisa pesar nada.
@@ -35,7 +35,7 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
       </div>
 
       {items.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+        <p className="rounded-2xl border border-dashed border-orange-200 p-6 text-center text-sm text-neutral-500 dark:border-orange-800 dark:text-neutral-400">
           Nenhum item cadastrado no cardápio ainda.
         </p>
       ) : (
@@ -63,7 +63,7 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                 : {
                     label: "Aguardando confirmações",
                     className:
-                      "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300",
+                      "bg-orange-100 text-neutral-700 dark:bg-orange-900 dark:text-neutral-300",
                   };
 
             return (
@@ -73,19 +73,19 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                   needsVolunteer
                     ? "border-amber-300 bg-amber-50/70 dark:border-amber-500/40 dark:bg-amber-500/10"
                     : item.isEnough
-                      ? "border-orange-200 bg-orange-50/50 dark:border-orange-500/30 dark:bg-orange-500/5"
-                      : "border-zinc-200 bg-zinc-50/60 dark:border-zinc-800 dark:bg-zinc-950/40"
+                      ? "border-orange-100 bg-orange-50/60"
+                      : "border-orange-100 bg-orange-50/40 dark:border-orange-900 dark:bg-orange-950/40"
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
                   <div className="space-y-1.5">
-                    <h3 className="text-sm font-semibold leading-snug text-zinc-900 dark:text-zinc-50">
+                    <h3 className="text-sm font-semibold leading-snug text-orange-950">
                       {item.name}
                     </h3>
                     <span
                       className={`inline-block rounded-full px-2 py-0.5 text-[11px] font-semibold ${
                         CATEGORY_STYLES[item.category] ??
-                        "bg-zinc-100 text-zinc-700 dark:bg-zinc-800 dark:text-zinc-300"
+                        "bg-orange-100 text-neutral-700 dark:bg-orange-900 dark:text-neutral-300"
                       }`}
                     >
                       {CATEGORY_LABELS[item.category] ?? item.category}
@@ -103,11 +103,11 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                 </div>
 
                 <div className="grid grid-cols-2 gap-2">
-                  <div className="rounded-xl bg-white/70 px-3 py-2 dark:bg-zinc-900/60">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                  <div className="rounded-xl bg-white px-3 py-2">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
                       Sugerido
                     </p>
-                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                    <p className="text-sm font-semibold text-orange-950">
                       {item.suggestedServings > 0
                         ? `${item.suggestedServings} ${
                             item.suggestedServings === 1
@@ -117,11 +117,11 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                         : "Aguardando confirmações"}
                     </p>
                   </div>
-                  <div className="rounded-xl bg-white/70 px-3 py-2 dark:bg-zinc-900/60">
-                    <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                  <div className="rounded-xl bg-white px-3 py-2">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-neutral-500 dark:text-neutral-400">
                       Já garantido
                     </p>
-                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                    <p className="text-sm font-semibold text-orange-950">
                       {pluralize(
                         item.qtdVoluntarios,
                         "voluntário",
@@ -131,9 +131,9 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                   </div>
                 </div>
 
-                <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+                <p className="text-xs leading-relaxed text-neutral-700">
                   Referência:{" "}
-                  <strong className="font-medium text-zinc-700 dark:text-zinc-300">
+                  <strong className="font-medium text-neutral-700 dark:text-neutral-300">
                     1 {item.servingLabel}
                   </strong>{" "}
                   ({item.servesDescription}).
@@ -150,7 +150,7 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                   </p>
                 ) : item.volunteers.length > 0 ? (
                   <div className="space-y-2">
-                    <p className="flex items-center gap-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-300">
+                    <p className="flex items-center gap-1.5 text-xs font-medium text-neutral-700 dark:text-neutral-300">
                       <Users className="size-3.5" aria-hidden="true" />
                       Quem já vai levar
                     </p>
@@ -158,7 +158,7 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                       {item.volunteers.map((volunteer) => (
                         <li
                           key={volunteer.participantId}
-                          className="rounded-lg border border-orange-200 bg-white px-2 py-1 text-[11px] font-medium text-orange-800 dark:border-orange-500/30 dark:bg-zinc-900 dark:text-amber-300"
+                          className="rounded-lg border border-orange-200 bg-white px-2 py-1 text-[11px] font-medium text-orange-800"
                         >
                           {volunteer.name}
                         </li>

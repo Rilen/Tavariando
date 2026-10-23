@@ -9,17 +9,17 @@ export function SharedTable({ specialDishes }: SharedTableProps) {
   return (
     <section
       id="mesa-compartilhada"
-      className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-900/5 sm:p-7 dark:border-zinc-800 dark:bg-zinc-900"
+      className="rounded-3xl border border-orange-100 bg-white p-5 shadow-md shadow-orange-950/5 sm:p-7 dark:border-orange-900 dark:bg-orange-950"
     >
       <div className="mb-6 flex items-start gap-3">
         <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
           <Sparkles className="size-5" aria-hidden="true" />
         </span>
         <div>
-          <h2 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
+          <h2 className="text-lg font-bold tracking-tight text-orange-950">
             Mesa de Gostosuras, Frutas & Petiscos
           </h2>
-          <p className="text-sm text-zinc-500 dark:text-zinc-400">
+          <p className="text-sm text-neutral-700">
             Pratos adicionais, salpicões, doces e frutas que a família já
             prometeu levar.
           </p>
@@ -27,12 +27,12 @@ export function SharedTable({ specialDishes }: SharedTableProps) {
       </div>
 
       {specialDishes.length === 0 ? (
-        <p className="rounded-2xl border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
+        <p className="rounded-2xl border border-dashed border-orange-200 p-6 text-center text-sm text-neutral-500 dark:border-orange-800 dark:text-neutral-400">
           Ninguém prometeu uma gostosura, fruta ou petisco ainda. Seja o
           primeiro a complementar a mesa!
         </p>
       ) : (
-        <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">
+        <ul className="divide-y divide-orange-100 dark:divide-orange-900">
           {specialDishes.map((dish) => (
             <li
               key={dish.id}
@@ -43,8 +43,8 @@ export function SharedTable({ specialDishes }: SharedTableProps) {
               </span>
 
               <div className="min-w-0 flex-1 space-y-1">
-                <p className="text-sm leading-relaxed text-zinc-700 dark:text-zinc-200">
-                  <strong className="font-semibold text-zinc-900 dark:text-zinc-50">
+                <p className="text-sm leading-relaxed text-neutral-700">
+                  <strong className="font-semibold text-orange-950">
                     {dish.participantName}:
                   </strong>{" "}
                   {dish.description}
