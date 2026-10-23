@@ -6,6 +6,12 @@ export type ServingProfile = {
 };
 
 const SERVING_PROFILES: Record<string, ServingProfile> = {
+  "proteínas / carnes (bovino, frango, linguiça)": {
+    label: "porção familiar",
+    pluralLabel: "porções familiares",
+    servesPeople: 10,
+    servesDescription: "~1 a 1,5 kg para grelhar ou servir",
+  },
   "arroz branco": {
     label: "travessa/panela média",
     pluralLabel: "travessas/panelas médias",
@@ -13,40 +19,58 @@ const SERVING_PROFILES: Record<string, ServingProfile> = {
     servesDescription: "serve ~10 a 12 pessoas",
   },
   "farofa pronta": {
-    label: "travessa média",
-    pluralLabel: "travessas médias",
+    label: "travessa/pote médio",
+    pluralLabel: "travessas/potes médios",
     servesPeople: 15,
     servesDescription: "serve ~12 a 15 pessoas",
   },
-  "salada de maionese/batata": {
-    label: "travessa grande",
-    pluralLabel: "travessas grandes",
-    servesPeople: 12,
-    servesDescription: "serve ~10 a 12 pessoas",
-  },
-  "proteínas / carnes (carne bovina, frango ou linguiça)": {
-    label: "porção familiar / pacote",
-    pluralLabel: "porções familiares / pacotes",
-    servesPeople: 10,
-    servesDescription: "~1 a 1,5 kg para grelhar ou servir",
-  },
-  sobremesa: {
+  "salada de maionese / batata": {
     label: "travessa média",
     pluralLabel: "travessas médias",
     servesPeople: 12,
     servesDescription: "serve ~10 a 12 pessoas",
   },
-  "copos/pratos descartáveis": {
-    label: "pacote (50 unidades)",
-    pluralLabel: "pacotes (50 unidades)",
-    servesPeople: 25,
-    servesDescription: "serve ~25 pessoas",
+  sobremesa: {
+    label: "travessa/doce",
+    pluralLabel: "travessas/doces",
+    servesPeople: 12,
+    servesDescription: "serve ~10 a 12 pessoas",
   },
-  "guardanapos/carvão": {
-    label: "kit",
-    pluralLabel: "kits",
+  "carvão vegetal": {
+    label: "saco (2,5 a 4 kg)",
+    pluralLabel: "sacos (2,5 a 4 kg)",
     servesPeople: 20,
-    servesDescription: "serve ~20 pessoas",
+    servesDescription: "para um churrasco de ~20 pessoas",
+  },
+  "copos descartáveis": {
+    label: "pacote (100 un)",
+    pluralLabel: "pacotes (100 un)",
+    servesPeople: 50,
+    servesDescription: "~2 copos por pessoa",
+  },
+  "pratos descartáveis (refeição)": {
+    label: "pacote (50 un)",
+    pluralLabel: "pacotes (50 un)",
+    servesPeople: 50,
+    servesDescription: "1 prato por pessoa",
+  },
+  "garfos descartáveis": {
+    label: "pacote (50 un)",
+    pluralLabel: "pacotes (50 un)",
+    servesPeople: 50,
+    servesDescription: "1 garfo por pessoa",
+  },
+  "colheres de sobremesa descartáveis": {
+    label: "pacote (50 un)",
+    pluralLabel: "pacotes (50 un)",
+    servesPeople: 50,
+    servesDescription: "1 colher por pessoa",
+  },
+  "guardanapos de papel": {
+    label: "pacote/fardo",
+    pluralLabel: "pacotes/fardos",
+    servesPeople: 50,
+    servesDescription: "para ~50 pessoas",
   },
 };
 
