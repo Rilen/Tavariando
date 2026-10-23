@@ -5,7 +5,6 @@ import { getDashboardData } from "@/app/actions/event";
 import { ConfirmationForm } from "@/components/ConfirmationForm";
 import { DashboardItems } from "@/components/DashboardItems";
 import { HeaderStats } from "@/components/HeaderStats";
-import { IceReminder } from "@/components/IceReminder";
 import { MyQuotaCard } from "@/components/MyQuotaCard";
 import { PixContributionCard } from "@/components/PixContributionCard";
 import { SharedTable } from "@/components/SharedTable";
@@ -112,8 +111,6 @@ function DashboardLoading() {
 export default function Home() {
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
-      <IceReminder />
-
       <Suspense fallback={<DashboardLoading />}>
         <Dashboard />
       </Suspense>

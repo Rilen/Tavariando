@@ -43,8 +43,8 @@ export function PixContributionCard() {
           </h2>
           <p className="text-sm leading-relaxed text-amber-900/80 dark:text-amber-100/80">
             Para ajudar com os custos do espaço e da organização (luz, gás,
-            limpeza e despesas gerais), qualquer valor é muito bem-vindo e fica
-            a critério de cada um!
+            aluguel de mesas e cadeiras, limpeza e despesas gerais), qualquer
+            valor é muito bem-vindo e fica a critério de cada um!
           </p>
         </div>
 

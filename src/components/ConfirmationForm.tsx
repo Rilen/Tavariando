@@ -207,7 +207,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
           </span>
         </label>
 
-        <IceReminder compact />
+        <IceReminder />
 
         <fieldset className="space-y-3">
           <legend className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
