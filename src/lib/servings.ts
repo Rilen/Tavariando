@@ -24,11 +24,11 @@ const SERVING_PROFILES: Record<string, ServingProfile> = {
     servesPeople: 12,
     servesDescription: "serve ~10 a 12 pessoas",
   },
-  macarrão: {
-    label: "travessa/panela média",
-    pluralLabel: "travessas/panelas médias",
+  "proteínas / carnes (carne bovina, frango ou linguiça)": {
+    label: "porção familiar / pacote",
+    pluralLabel: "porções familiares / pacotes",
     servesPeople: 10,
-    servesDescription: "serve ~8 a 10 pessoas",
+    servesDescription: "~1 a 1,5 kg para grelhar ou servir",
   },
   sobremesa: {
     label: "travessa média",

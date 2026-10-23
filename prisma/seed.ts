@@ -21,9 +21,9 @@ const foodItems = [
     unitMeasure: "g",
   },
   {
-    name: "Macarrão",
+    name: "Proteínas / Carnes (Carne bovina, Frango ou Linguiça)",
     category: "COMIDA",
-    portionPerPerson: 80,
+    portionPerPerson: 120,
     unitMeasure: "g",
   },
   {
@@ -46,7 +46,38 @@ const foodItems = [
   },
 ];
 
+const LEGACY_ITEM_RENAMES = [
+  {
+    from: "Macarrão",
+    to: {
+      name: "Proteínas / Carnes (Carne bovina, Frango ou Linguiça)",
+      category: "COMIDA",
+      portionPerPerson: 120,
+      unitMeasure: "g",
+    },
+  },
+];
+
 async function main() {
+  for (const migration of LEGACY_ITEM_RENAMES) {
+    const legacyItem = await prisma.foodItem.findFirst({
+      where: { name: migration.from },
+    });
+
+    if (!legacyItem) continue;
+
+    const targetItem = await prisma.foodItem.findFirst({
+      where: { name: migration.to.name },
+    });
+
+    if (targetItem) continue;
+
+    await prisma.foodItem.update({
+      where: { id: legacyItem.id },
+      data: migration.to,
+    });
+  }
+
   for (const item of foodItems) {
     const existing = await prisma.foodItem.findFirst({
       where: { name: item.name },
