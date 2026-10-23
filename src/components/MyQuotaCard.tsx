@@ -13,7 +13,6 @@ import {
   type DashboardItem,
   type DashboardParticipant,
 } from "@/app/actions/event";
-import { formatQuantity } from "@/lib/format";
 import { clearStoredParticipantId, useParticipantId } from "@/lib/participant-storage";
 
 type MyQuotaCardProps = {
@@ -35,18 +34,9 @@ export function MyQuotaCard({
     ? participants.find((item) => item.id === participantId)
     : undefined;
 
-  const myItems =
-    participant && participant.itemIds.length > 0
-      ? items
-          .filter((item) => participant.itemIds.includes(item.id))
-          .map((item) => ({
-            item,
-            quota:
-              item.volunteers.find(
-                (volunteer) => volunteer.participantId === participant.id,
-              )?.quota ?? item.cotaPorVoluntario,
-          }))
-      : [];
+  const myItems = participant
+    ? items.filter((item) => participant.itemIds.includes(item.id))
+    : [];
 
   async function handleCancel() {
     if (!participant || isCancelling) return;
@@ -106,29 +96,47 @@ export function MyQuotaCard({
           <p className="text-sm leading-relaxed text-emerald-50/90">
             {myItems.length > 0
               ? "Você está responsável por:"
-              : "Você confirmou presença, mas ainda não assumiu nenhum item. Escolha algo no cardápio ao lado."}
+              : participant.specialDish
+                ? "Seu prato especial já está na mesa:"
+                : "Você confirmou presença, mas ainda não assumiu nenhum item. Escolha algo no cardápio ao lado."}
           </p>
         </div>
 
         {myItems.length > 0 && (
           <ul className="space-y-3">
-            {myItems.map(({ item, quota }) => (
+            {myItems.map((item) => (
               <li
                 key={item.id}
                 className="rounded-2xl bg-white/10 p-4 backdrop-blur-sm"
               >
                 <p className="text-sm font-semibold text-white">{item.name}</p>
                 <p className="mt-1 text-sm text-emerald-50/90">
-                  Sua cota atualizada é de{" "}
-                  <strong className="text-lg font-bold text-white">
-                    {formatQuantity(quota, item.unitMeasure)}
+                  Você leva{" "}
+                  <strong className="text-base font-bold text-white">
+                    1 {item.servingLabel}
                   </strong>{" "}
-                  (para alimentar {totalPessoas}{" "}
-                  {totalPessoas === 1 ? "pessoa" : "pessoas"} no total).
+                  ({item.servesDescription}) e ajuda a alimentar {totalPessoas}{" "}
+                  {totalPessoas === 1 ? "pessoa" : "pessoas"} no total.
                 </p>
               </li>
             ))}
           </ul>
+        )}
+
+        {participant.specialDish && (
+          <div className="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
+            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-100/80">
+              Prato especial
+            </p>
+            <p className="mt-1 text-sm font-semibold text-white">
+              {participant.specialDish.description}
+            </p>
+            <p className="mt-1 text-xs text-emerald-50/90">
+              {participant.specialDish.replacesItemName
+                ? `Substitui ${participant.specialDish.replacesItemName}.`
+                : "Adicional à mesa compartilhada."}
+            </p>
+          </div>
         )}
 
         <div className="flex flex-wrap gap-2 text-xs">
@@ -137,10 +145,15 @@ export function MyQuotaCard({
             {participant.peopleCount === 1 ? "pessoa na sua turma" : "pessoas na sua turma"}
           </span>
           {participant.bringsOwnDrink && (
-            <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-300/20 px-3 py-1 font-medium text-amber-100">
-              <Wine className="size-3.5" aria-hidden="true" />
-              Leva a própria bebida
-            </span>
+            <>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-amber-300/20 px-3 py-1 font-medium text-amber-100">
+                <Wine className="size-3.5" aria-hidden="true" />
+                Leva a própria bebida
+              </span>
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-sky-300/20 px-3 py-1 font-medium text-sky-100">
+                🧊 Leva também o gelo
+              </span>
+            </>
           )}
         </div>
 

@@ -2,25 +2,37 @@
 
 import { revalidatePath } from "next/cache";
 import { prisma } from "@/lib/prisma";
+import { getServingProfile } from "@/lib/servings";
 
 const CATEGORY_ORDER = ["COMIDA", "BEBIDA", "SOBREMESA", "DESCARTAVEL"];
 
 export type DashboardVolunteer = {
   participantId: string;
   name: string;
-  quota: number;
 };
 
 export type DashboardItem = {
   id: string;
   name: string;
   category: string;
-  portionPerPerson: number;
-  unitMeasure: string;
-  totalNecessario: number;
+  servingLabel: string;
+  servingLabelPlural: string;
+  servesPeople: number;
+  servesDescription: string;
+  suggestedServings: number;
+  missingServings: number;
+  isEnough: boolean;
   qtdVoluntarios: number;
-  cotaPorVoluntario: number;
   volunteers: DashboardVolunteer[];
+};
+
+export type SpecialDishSummary = {
+  id: string;
+  participantId: string;
+  participantName: string;
+  description: string;
+  replacesItemId: string | null;
+  replacesItemName: string | null;
 };
 
 export type DashboardParticipant = {
@@ -30,6 +42,11 @@ export type DashboardParticipant = {
   peopleCount: number;
   bringsOwnDrink: boolean;
   itemIds: string[];
+  specialDish: {
+    description: string;
+    replacesItemId: string | null;
+    replacesItemName: string | null;
+  } | null;
 };
 
 export type DashboardData = {
@@ -38,9 +55,11 @@ export type DashboardData = {
     totalConfirmados: number;
     totalItens: number;
     itensSemVoluntario: number;
+    itensGarantidos: number;
   };
   items: DashboardItem[];
   participants: DashboardParticipant[];
+  specialDishes: SpecialDishSummary[];
 };
 
 export type ActionState = {
@@ -57,9 +76,11 @@ function emptyDashboardData(): DashboardData {
       totalConfirmados: 0,
       totalItens: 0,
       itensSemVoluntario: 0,
+      itensGarantidos: 0,
     },
     items: [],
     participants: [],
+    specialDishes: [],
   };
 }
 
@@ -82,6 +103,14 @@ async function fetchDashboardData(): Promise<DashboardData> {
         name: true,
         dependentsCount: true,
         bringsOwnDrink: true,
+        specialDish: {
+          select: {
+            id: true,
+            description: true,
+            replacesFoodItemId: true,
+            replacesFoodItem: { select: { name: true } },
+          },
+        },
         assignments: {
           select: { foodItemId: true },
         },
@@ -99,7 +128,11 @@ async function fetchDashboardData(): Promise<DashboardData> {
           select: {
             participantId: true,
             participant: {
-              select: { name: true, confirmed: true },
+              select: {
+                name: true,
+                confirmed: true,
+                specialDish: { select: { replacesFoodItemId: true } },
+              },
             },
           },
         },
@@ -114,29 +147,32 @@ async function fetchDashboardData(): Promise<DashboardData> {
 
   const items = foodItems
     .map((item) => {
+      const profile = getServingProfile(item);
       const confirmedAssignments = item.assignments.filter(
-        (assignment) => assignment.participant.confirmed,
+        (assignment) =>
+          assignment.participant.confirmed &&
+          assignment.participant.specialDish?.replacesFoodItemId !== item.id,
       );
       const qtdVoluntarios = confirmedAssignments.length;
-      const totalNecessario = totalPessoas * item.portionPerPerson;
-      const cotaPorVoluntario =
-        qtdVoluntarios > 0
-          ? Math.ceil(totalNecessario / qtdVoluntarios)
-          : totalNecessario;
+      const suggestedServings =
+        totalPessoas > 0 ? Math.ceil(totalPessoas / profile.servesPeople) : 0;
+      const missingServings = Math.max(0, suggestedServings - qtdVoluntarios);
 
       return {
         id: item.id,
         name: item.name,
         category: item.category,
-        portionPerPerson: item.portionPerPerson,
-        unitMeasure: item.unitMeasure,
-        totalNecessario,
+        servingLabel: profile.label,
+        servingLabelPlural: profile.pluralLabel,
+        servesPeople: profile.servesPeople,
+        servesDescription: profile.servesDescription,
+        suggestedServings,
+        missingServings,
+        isEnough: suggestedServings > 0 && qtdVoluntarios >= suggestedServings,
         qtdVoluntarios,
-        cotaPorVoluntario,
         volunteers: confirmedAssignments.map((assignment) => ({
           participantId: assignment.participantId,
           name: assignment.participant.name,
-          quota: cotaPorVoluntario,
         })),
       };
     })
@@ -149,6 +185,22 @@ async function fetchDashboardData(): Promise<DashboardData> {
       return a.name.localeCompare(b.name, "pt-BR");
     });
 
+  const specialDishes = participants.flatMap((participant) =>
+    participant.specialDish
+      ? [
+          {
+            id: participant.specialDish.id,
+            participantId: participant.id,
+            participantName: participant.name,
+            description: participant.specialDish.description,
+            replacesItemId: participant.specialDish.replacesFoodItemId,
+            replacesItemName:
+              participant.specialDish.replacesFoodItem?.name ?? null,
+          },
+        ]
+      : [],
+  );
+
   return {
     stats: {
       totalPessoas,
@@ -156,6 +208,7 @@ async function fetchDashboardData(): Promise<DashboardData> {
       totalItens: items.length,
       itensSemVoluntario: items.filter((item) => item.qtdVoluntarios === 0)
         .length,
+      itensGarantidos: items.filter((item) => item.isEnough).length,
     },
     items,
     participants: participants.map((participant) => ({
@@ -167,7 +220,16 @@ async function fetchDashboardData(): Promise<DashboardData> {
       itemIds: participant.assignments.map(
         (assignment) => assignment.foodItemId,
       ),
+      specialDish: participant.specialDish
+        ? {
+            description: participant.specialDish.description,
+            replacesItemId: participant.specialDish.replacesFoodItemId,
+            replacesItemName:
+              participant.specialDish.replacesFoodItem?.name ?? null,
+          }
+        : null,
     })),
+    specialDishes,
   };
 }
 
@@ -189,6 +251,13 @@ export async function registerOrUpdateParticipant(
     formData.get("bringsOwnDrink") === "true";
   const rawParticipantId = String(formData.get("participantId") ?? "").trim();
   const participantId = rawParticipantId || null;
+  const specialDishDescription = String(
+    formData.get("specialDishDescription") ?? "",
+  ).trim();
+  const rawSpecialDishReplacesItemId = String(
+    formData.get("specialDishReplacesItemId") ?? "",
+  ).trim();
+  const specialDishReplacesItemId = rawSpecialDishReplacesItemId || null;
 
   const selectedFoodItemIds = [
     ...new Set(
@@ -226,11 +295,44 @@ export async function registerOrUpdateParticipant(
     };
   }
 
+  if (specialDishDescription.length > 200) {
+    return {
+      status: "error",
+      message: "A descrição do prato especial pode ter no máximo 200 caracteres.",
+    };
+  }
+
+  if (specialDishReplacesItemId && !specialDishDescription) {
+    return {
+      status: "error",
+      message:
+        "Descreva o prato especial que você vai levar para indicar qual item ele substitui.",
+    };
+  }
+
   try {
+    if (specialDishReplacesItemId) {
+      const replacementItem = await prisma.foodItem.findUnique({
+        where: { id: specialDishReplacesItemId },
+        select: { id: true },
+      });
+
+      if (!replacementItem) {
+        return {
+          status: "error",
+          message: "O prato que você quer substituir não foi encontrado.",
+        };
+      }
+    }
+
+    const effectiveSelectedFoodItemIds = specialDishReplacesItemId
+      ? selectedFoodItemIds.filter((id) => id !== specialDishReplacesItemId)
+      : selectedFoodItemIds;
+
     const participant = await prisma.$transaction(async (tx) => {
-      const validItems = selectedFoodItemIds.length
+      const validItems = effectiveSelectedFoodItemIds.length
         ? await tx.foodItem.findMany({
-            where: { id: { in: selectedFoodItemIds } },
+            where: { id: { in: effectiveSelectedFoodItemIds } },
             select: { id: true },
           })
         : [];
@@ -268,6 +370,25 @@ export async function registerOrUpdateParticipant(
             participantId: savedParticipant.id,
             foodItemId: item.id,
           })),
+        });
+      }
+
+      if (specialDishDescription) {
+        await tx.specialDish.upsert({
+          where: { participantId: savedParticipant.id },
+          create: {
+            participantId: savedParticipant.id,
+            description: specialDishDescription,
+            replacesFoodItemId: specialDishReplacesItemId,
+          },
+          update: {
+            description: specialDishDescription,
+            replacesFoodItemId: specialDishReplacesItemId,
+          },
+        });
+      } else {
+        await tx.specialDish.deleteMany({
+          where: { participantId: savedParticipant.id },
         });
       }
 
@@ -313,6 +434,7 @@ export async function cancelParticipation(
       if (!participant) return null;
 
       await tx.itemAssignment.deleteMany({ where: { participantId } });
+      await tx.specialDish.deleteMany({ where: { participantId } });
       await tx.participant.update({
         where: { id: participantId },
         data: { confirmed: false },

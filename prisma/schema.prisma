@@ -17,6 +17,7 @@ model Participant {
   createdAt       DateTime         @default(now())
   updatedAt       DateTime         @updatedAt
   assignments     ItemAssignment[]
+  specialDish     SpecialDish?
 }
 
 model FoodItem {
@@ -26,6 +27,7 @@ model FoodItem {
   portionPerPerson Float
   unitMeasure      String
   assignments      ItemAssignment[]
+  specialDishReplacements SpecialDish[]
 }
 
 model ItemAssignment {
@@ -36,4 +38,14 @@ model ItemAssignment {
   foodItem      FoodItem    @relation(fields: [foodItemId], references: [id], onDelete: Cascade)
 
   @@unique([participantId, foodItemId])
+}
+
+model SpecialDish {
+  id                 String     @id @default(cuid())
+  participantId      String     @unique
+  description        String
+  replacesFoodItemId String?
+  participant        Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+  replacesFoodItem   FoodItem?  @relation(fields: [replacesFoodItemId], references: [id], onDelete: SetNull)
+  createdAt          DateTime   @default(now())
 }

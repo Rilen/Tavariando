@@ -5,6 +5,7 @@ import {
   Check,
   CheckCircle2,
   Loader2,
+  Sparkles,
   UserPlus,
   Wine,
 } from "lucide-react";
@@ -13,12 +14,8 @@ import {
   type ActionState,
   type DashboardItem,
 } from "@/app/actions/event";
-import {
-  CATEGORY_LABELS,
-  CATEGORY_STYLES,
-  formatQuantity,
-  pluralize,
-} from "@/lib/format";
+import { CATEGORY_LABELS, CATEGORY_STYLES, pluralize } from "@/lib/format";
+import { IceReminder } from "@/components/IceReminder";
 import { storeParticipantId, useParticipantId } from "@/lib/participant-storage";
 
 type ConfirmationFormProps = {
@@ -41,6 +38,9 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
   const [dependentsCount, setDependentsCount] = useState(0);
   const [bringsOwnDrink, setBringsOwnDrink] = useState(false);
   const [selectedFoodItemIds, setSelectedFoodItemIds] = useState<string[]>([]);
+  const [specialDishDescription, setSpecialDishDescription] = useState("");
+  const [specialDishReplacesItemId, setSpecialDishReplacesItemId] =
+    useState("");
 
   useEffect(() => {
     if (state.status === "success" && state.participantId) {
@@ -54,6 +54,16 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
         ? current.filter((id) => id !== foodItemId)
         : [...current, foodItemId],
     );
+  }
+
+  function handleReplacementChange(value: string) {
+    setSpecialDishReplacesItemId(value);
+
+    if (value) {
+      setSelectedFoodItemIds((current) =>
+        current.filter((id) => id !== value),
+      );
+    }
   }
 
   return (
@@ -197,6 +207,8 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
           </span>
         </label>
 
+        <IceReminder compact />
+
         <fieldset className="space-y-3">
           <legend className="text-sm font-medium text-zinc-700 dark:text-zinc-300">
             O que você pode levar?
@@ -235,8 +247,10 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
                           {item.name}
                         </span>
                         <span className="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-400">
-                          {formatQuantity(item.portionPerPerson, item.unitMeasure)}{" "}
-                          por pessoa
+                          <strong className="font-semibold text-zinc-700 dark:text-zinc-300">
+                            1 {item.servingLabel}
+                          </strong>{" "}
+                          ({item.servesDescription})
                         </span>
                       </span>
                     </span>
@@ -267,13 +281,20 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
                         "voluntários",
                       )}
                     </span>
-                    {item.qtdVoluntarios > 0 && (
-                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-medium text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300">
-                        cota de{" "}
-                        {formatQuantity(
-                          item.cotaPorVoluntario,
-                          item.unitMeasure,
-                        )}
+                    {item.isEnough ? (
+                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300">
+                        Suficiente garantido
+                      </span>
+                    ) : item.suggestedServings > 0 ? (
+                      <span className="rounded-full bg-amber-100 px-2 py-0.5 text-[11px] font-semibold text-amber-800 dark:bg-amber-500/15 dark:text-amber-300">
+                        Faltam {item.missingServings}{" "}
+                        {item.missingServings === 1
+                          ? item.servingLabel
+                          : item.servingLabelPlural}
+                      </span>
+                    ) : (
+                      <span className="rounded-full bg-zinc-100 px-2 py-0.5 text-[11px] font-medium text-zinc-500 dark:bg-zinc-800 dark:text-zinc-400">
+                        Aguardando confirmações
                       </span>
                     )}
                   </span>
@@ -287,6 +308,69 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
               Nenhum item disponível ainda. Avise a organização!
             </p>
           )}
+        </fieldset>
+
+        <fieldset className="space-y-4 rounded-2xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
+          <legend className="flex items-center gap-2 px-1 text-sm font-semibold text-amber-950 dark:text-amber-100">
+            <Sparkles className="size-4" aria-hidden="true" />
+            Vai levar algo especial ou frutas da sua preferência?
+          </legend>
+          <p className="text-xs leading-relaxed text-amber-900/80 dark:text-amber-100/80">
+            Salpicão, torta, melancia, cacho de banana... conte para a família e
+            combine se isso entra no lugar de um prato básico.
+          </p>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="special-dish-description"
+              className="text-sm font-medium text-amber-950 dark:text-amber-100"
+            >
+              O que você vai levar?
+            </label>
+            <textarea
+              id="special-dish-description"
+              name="specialDishDescription"
+              rows={2}
+              maxLength={200}
+              value={specialDishDescription}
+              onChange={(event) =>
+                setSpecialDishDescription(event.target.value)
+              }
+              placeholder="Ex: 1 travessa de salpicão caseiro, 1 cacho de banana, 1 melancia, torta de limão"
+              className="w-full resize-y rounded-xl border border-amber-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 dark:border-amber-500/40 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-amber-400"
+            />
+          </div>
+
+          <div className="space-y-2">
+            <label
+              htmlFor="special-dish-replacement"
+              className="text-sm font-medium text-amber-950 dark:text-amber-100"
+            >
+              Isso substitui um item comum?
+            </label>
+            <select
+              id="special-dish-replacement"
+              name="specialDishReplacesItemId"
+              value={specialDishReplacesItemId}
+              onChange={(event) =>
+                handleReplacementChange(event.target.value)
+              }
+              className="w-full rounded-xl border border-amber-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-sm outline-none transition focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 dark:border-amber-500/40 dark:bg-zinc-950 dark:text-zinc-50 dark:focus:border-amber-400"
+            >
+              <option value="">Não, é adicional</option>
+              {items.map((item) => (
+                <option key={item.id} value={item.id}>
+                  Sim, substitui {item.name}
+                </option>
+              ))}
+            </select>
+            {specialDishReplacesItemId && (
+              <p className="text-xs text-amber-800 dark:text-amber-200">
+                Esse item sai da sua lista de pratos básicos; o especial entra
+                na mesa compartilhada.
+              </p>
+            )}
+          </div>
         </fieldset>
 
         {state.status !== "idle" && (

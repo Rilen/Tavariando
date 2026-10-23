@@ -5,7 +5,10 @@ import { getDashboardData } from "@/app/actions/event";
 import { ConfirmationForm } from "@/components/ConfirmationForm";
 import { DashboardItems } from "@/components/DashboardItems";
 import { HeaderStats } from "@/components/HeaderStats";
+import { IceReminder } from "@/components/IceReminder";
 import { MyQuotaCard } from "@/components/MyQuotaCard";
+import { PixContributionCard } from "@/components/PixContributionCard";
+import { SharedTable } from "@/components/SharedTable";
 
 async function Dashboard() {
   await connection();
@@ -45,8 +48,8 @@ async function Dashboard() {
                   <ListChecks className="size-4" aria-hidden="true" />
                 </span>
                 <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
-                  Escolha os pratos que pode levar. Cada item pode ter vários
-                  voluntários.
+                  Escolha a travessa ou porção que pode levar. Cada item pode
+                  ter vários voluntários.
                 </p>
               </li>
               <li className="flex gap-3">
@@ -55,7 +58,8 @@ async function Dashboard() {
                 </span>
                 <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
                   A cota de cada família é recalculada automaticamente. Todo
-                  mundo leva um pouco, ninguém leva tudo.
+                  mundo leva uma travessa, ninguém leva tudo. Pratos especiais
+                  e frutas entram na mesa compartilhada.
                 </p>
               </li>
             </ol>
@@ -63,7 +67,11 @@ async function Dashboard() {
         </aside>
       </div>
 
+      <PixContributionCard />
+
       <DashboardItems items={data.items} totalPessoas={data.stats.totalPessoas} />
+
+      <SharedTable specialDishes={data.specialDishes} />
     </div>
   );
 }
@@ -80,6 +88,7 @@ function DashboardSkeleton() {
         </div>
       </div>
       <div className="h-72 rounded-3xl bg-zinc-200 dark:bg-zinc-800" />
+      <div className="h-56 rounded-3xl bg-zinc-200 dark:bg-zinc-800" />
     </div>
   );
 }
@@ -103,6 +112,8 @@ function DashboardLoading() {
 export default function Home() {
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
+      <IceReminder />
+
       <Suspense fallback={<DashboardLoading />}>
         <Dashboard />
       </Suspense>

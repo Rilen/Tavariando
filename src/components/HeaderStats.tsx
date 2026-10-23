@@ -30,9 +30,9 @@ export function HeaderStats({ stats }: HeaderStatsProps) {
           </h1>
 
           <p className="max-w-xl text-sm leading-relaxed text-emerald-50/90 sm:text-base">
-            Confirme sua presença, escolha o que pode levar e acompanhe em tempo
-            real como estão as cotas de cada prato. Assim ninguém fica
-            sobrecarregado e todo mundo aproveita a confraternização.
+            Confirme sua presença, escolha a travessa ou porção que pode levar
+            e acompanhe em tempo real o que já está garantido. Assim ninguém
+            fica sobrecarregado e todo mundo aproveita a confraternização.
           </p>
         </div>
 
@@ -71,7 +71,7 @@ export function HeaderStats({ stats }: HeaderStatsProps) {
             </span>
             <div>
               <dt className="text-xs uppercase tracking-wide text-emerald-50/80">
-                Itens no cardápio
+                Pratos no cardápio
               </dt>
               <dd className="text-2xl font-semibold leading-tight">
                 {stats.totalItens}
@@ -83,9 +83,12 @@ export function HeaderStats({ stats }: HeaderStatsProps) {
         <p className="text-xs text-emerald-50/80">
           {pluralize(stats.totalConfirmados, "família confirmada", "famílias confirmadas")}
           {" · "}
-          {stats.itensSemVoluntario === 0
-            ? "Todos os itens já têm voluntários."
-            : `${pluralize(stats.itensSemVoluntario, "item ainda precisa", "itens ainda precisam")} de voluntário.`}
+          {stats.itensGarantidos} de {stats.totalItens}{" "}
+          {stats.totalItens === 1 ? "prato garantido" : "pratos garantidos"}
+          {stats.itensSemVoluntario > 0
+            ? ` · ${pluralize(stats.itensSemVoluntario, "item ainda precisa", "itens ainda precisam")} de voluntário`
+            : " · todos os itens já têm voluntários"}
+          .
         </p>
       </div>
     </section>

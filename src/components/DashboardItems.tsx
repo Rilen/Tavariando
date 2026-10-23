@@ -1,11 +1,11 @@
-import { AlertTriangle, ClipboardList, Users } from "lucide-react";
-import type { DashboardItem } from "@/app/actions/event";
 import {
-  CATEGORY_LABELS,
-  CATEGORY_STYLES,
-  formatQuantity,
-  pluralize,
-} from "@/lib/format";
+  AlertTriangle,
+  CheckCircle2,
+  ClipboardList,
+  Users,
+} from "lucide-react";
+import type { DashboardItem } from "@/app/actions/event";
+import { CATEGORY_LABELS, CATEGORY_STYLES, pluralize } from "@/lib/format";
 
 type DashboardItemsProps = {
   items: DashboardItem[];
@@ -24,11 +24,12 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
         </span>
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Transparência do cardápio
+            Pratos Básicos Garantidos
           </h2>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Total calculado para {pluralize(totalPessoas, "pessoa", "pessoas")}.
-            As cotas mudam conforme cada família confirma.
+            Status das travessas para{" "}
+            {pluralize(totalPessoas, "pessoa", "pessoas")}. Cada família leva
+            uma porção familiar; ninguém precisa pesar nada.
           </p>
         </div>
       </div>
@@ -40,7 +41,30 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
       ) : (
         <div className="grid gap-4 md:grid-cols-2">
           {items.map((item) => {
-            const needsVolunteer = item.qtdVoluntarios === 0;
+            const needsVolunteer =
+              totalPessoas > 0 && item.qtdVoluntarios === 0;
+
+            const status = item.isEnough
+              ? {
+                  label: "Suficiente garantido",
+                  className:
+                    "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
+                }
+              : item.suggestedServings > 0
+                ? {
+                    label: `Faltam ${item.missingServings} ${
+                      item.missingServings === 1
+                        ? item.servingLabel
+                        : item.servingLabelPlural
+                    }`,
+                    className:
+                      "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
+                  }
+                : {
+                    label: "Aguardando confirmações",
+                    className:
+                      "bg-zinc-100 text-zinc-600 dark:bg-zinc-800 dark:text-zinc-300",
+                  };
 
             return (
               <article
@@ -48,7 +72,9 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                 className={`flex flex-col gap-4 rounded-2xl border p-4 ${
                   needsVolunteer
                     ? "border-amber-300 bg-amber-50/70 dark:border-amber-500/40 dark:bg-amber-500/10"
-                    : "border-zinc-200 bg-zinc-50/60 dark:border-zinc-800 dark:bg-zinc-950/40"
+                    : item.isEnough
+                      ? "border-emerald-200 bg-emerald-50/50 dark:border-emerald-500/30 dark:bg-emerald-500/5"
+                      : "border-zinc-200 bg-zinc-50/60 dark:border-zinc-800 dark:bg-zinc-950/40"
                 }`}
               >
                 <div className="flex items-start justify-between gap-3">
@@ -66,15 +92,52 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                     </span>
                   </div>
 
-                  <div className="shrink-0 text-right">
+                  <span
+                    className={`inline-flex shrink-0 items-center gap-1 rounded-full px-2 py-0.5 text-[11px] font-semibold ${status.className}`}
+                  >
+                    {item.isEnough && (
+                      <CheckCircle2 className="size-3" aria-hidden="true" />
+                    )}
+                    {status.label}
+                  </span>
+                </div>
+
+                <div className="grid grid-cols-2 gap-2">
+                  <div className="rounded-xl bg-white/70 px-3 py-2 dark:bg-zinc-900/60">
                     <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
-                      Total necessário
+                      Sugerido
                     </p>
-                    <p className="text-lg font-bold text-zinc-900 dark:text-zinc-50">
-                      {formatQuantity(item.totalNecessario, item.unitMeasure)}
+                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                      {item.suggestedServings > 0
+                        ? `${item.suggestedServings} ${
+                            item.suggestedServings === 1
+                              ? item.servingLabel
+                              : item.servingLabelPlural
+                          }`
+                        : "Aguardando confirmações"}
+                    </p>
+                  </div>
+                  <div className="rounded-xl bg-white/70 px-3 py-2 dark:bg-zinc-900/60">
+                    <p className="text-[11px] font-medium uppercase tracking-wide text-zinc-500 dark:text-zinc-400">
+                      Já garantido
+                    </p>
+                    <p className="text-sm font-semibold text-zinc-900 dark:text-zinc-50">
+                      {pluralize(
+                        item.qtdVoluntarios,
+                        "voluntário",
+                        "voluntários",
+                      )}
                     </p>
                   </div>
                 </div>
+
+                <p className="text-xs leading-relaxed text-zinc-500 dark:text-zinc-400">
+                  Referência:{" "}
+                  <strong className="font-medium text-zinc-700 dark:text-zinc-300">
+                    1 {item.servingLabel}
+                  </strong>{" "}
+                  ({item.servesDescription}).
+                </p>
 
                 {needsVolunteer ? (
                   <p className="flex items-start gap-2 rounded-xl border border-amber-300 bg-amber-100/80 px-3 py-2 text-xs font-medium text-amber-900 dark:border-amber-500/40 dark:bg-amber-500/15 dark:text-amber-200">
@@ -85,37 +148,24 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                     Precisamos de voluntário! Nenhuma família assumiu este item
                     ainda.
                   </p>
-                ) : (
+                ) : item.volunteers.length > 0 ? (
                   <div className="space-y-2">
                     <p className="flex items-center gap-1.5 text-xs font-medium text-zinc-600 dark:text-zinc-300">
                       <Users className="size-3.5" aria-hidden="true" />
-                      {pluralize(
-                        item.qtdVoluntarios,
-                        "voluntário",
-                        "voluntários",
-                      )}{" "}
-                      · {formatQuantity(item.cotaPorVoluntario, item.unitMeasure)}{" "}
-                      para cada
+                      Quem já vai levar
                     </p>
                     <ul className="flex flex-wrap gap-1.5">
                       {item.volunteers.map((volunteer) => (
                         <li
                           key={volunteer.participantId}
                           className="rounded-lg border border-emerald-200 bg-white px-2 py-1 text-[11px] font-medium text-emerald-800 dark:border-emerald-500/30 dark:bg-zinc-900 dark:text-emerald-300"
-                          title={`Cota: ${formatQuantity(volunteer.quota, item.unitMeasure)}`}
                         >
                           {volunteer.name}
                         </li>
                       ))}
                     </ul>
                   </div>
-                )}
-
-                <p className="mt-auto text-[11px] text-zinc-500 dark:text-zinc-400">
-                  Referência:{" "}
-                  {formatQuantity(item.portionPerPerson, item.unitMeasure)} por
-                  pessoa.
-                </p>
+                ) : null}
               </article>
             );
           })}

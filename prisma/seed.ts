@@ -21,6 +21,12 @@ const foodItems = [
     unitMeasure: "g",
   },
   {
+    name: "Macarrão",
+    category: "COMIDA",
+    portionPerPerson: 80,
+    unitMeasure: "g",
+  },
+  {
     name: "Sobremesa",
     category: "SOBREMESA",
     portionPerPerson: 100,
