@@ -12,7 +12,7 @@ export function SharedTable({ specialDishes }: SharedTableProps) {
       className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-900/5 sm:p-7 dark:border-zinc-800 dark:bg-zinc-900"
     >
       <div className="mb-6 flex items-start gap-3">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-pink-100 text-pink-700 dark:bg-pink-500/15 dark:text-pink-300">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
           <Sparkles className="size-5" aria-hidden="true" />
         </span>
         <div>
@@ -55,7 +55,7 @@ export function SharedTable({ specialDishes }: SharedTableProps) {
                     Substitui {dish.replacesItemName}
                   </span>
                 ) : (
-                  <span className="inline-block rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300">
+                  <span className="inline-block rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-semibold text-orange-800 dark:bg-orange-500/15 dark:text-amber-300">
                     Adicional
                   </span>
                 )}

@@ -10,7 +10,7 @@ export const CATEGORY_STYLES: Record<string, string> = {
     "bg-amber-100 text-amber-800 dark:bg-amber-500/15 dark:text-amber-300",
   BEBIDA: "bg-sky-100 text-sky-800 dark:bg-sky-500/15 dark:text-sky-300",
   SOBREMESA:
-    "bg-pink-100 text-pink-800 dark:bg-pink-500/15 dark:text-pink-300",
+    "bg-orange-100 text-orange-800 dark:bg-orange-500/15 dark:text-orange-300",
   DESCARTAVEL:
     "bg-zinc-200 text-zinc-700 dark:bg-zinc-700/60 dark:text-zinc-300",
 };

@@ -64,23 +64,23 @@ export function MyQuotaCard({
 
   if (!participant) {
     return (
-      <section className="rounded-3xl border border-emerald-200 bg-emerald-50/70 p-6 dark:border-emerald-500/30 dark:bg-emerald-500/10">
+      <section className="rounded-3xl border border-orange-200 bg-orange-50/70 p-6 dark:border-orange-500/30 dark:bg-orange-500/10">
         <div className="flex items-start gap-3">
-          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white text-emerald-700 shadow-sm dark:bg-zinc-900 dark:text-emerald-300">
+          <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-white text-orange-700 shadow-sm dark:bg-zinc-900 dark:text-amber-300">
             <Utensils className="size-5" aria-hidden="true" />
           </span>
           <div className="space-y-2">
-            <h2 className="text-lg font-semibold tracking-tight text-emerald-950 dark:text-emerald-50">
+            <h2 className="text-lg font-semibold tracking-tight text-orange-950 dark:text-orange-50">
               Sua cota personalizada
             </h2>
-            <p className="text-sm leading-relaxed text-emerald-900/80 dark:text-emerald-100/80">
+            <p className="text-sm leading-relaxed text-amber-950/80 dark:text-orange-100/80">
               {participantId
                 ? "Não encontramos sua confirmação. Ela pode ter sido cancelada — preencha o formulário ao lado para entrar de novo."
                 : "Confirme sua presença ao lado. Depois, este espaço mostra exatamente o que você ficou responsável por levar."}
             </p>
             <a
               href="#confirmacao"
-              className="inline-flex items-center gap-1.5 text-sm font-semibold text-emerald-800 underline-offset-4 hover:underline dark:text-emerald-300"
+              className="inline-flex items-center gap-1.5 text-sm font-semibold text-orange-800 underline-offset-4 hover:underline dark:text-amber-300"
             >
               Ir para a confirmação
             </a>
@@ -91,16 +91,16 @@ export function MyQuotaCard({
   }
 
   return (
-    <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white shadow-xl shadow-emerald-900/15">
+    <section className="overflow-hidden rounded-3xl bg-gradient-to-br from-orange-600 to-amber-600 text-white shadow-xl shadow-amber-950/15">
       <div className="space-y-5 p-6">
         <div className="space-y-2">
-          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-emerald-100/80">
+          <p className="text-xs font-semibold uppercase tracking-[0.18em] text-orange-100/80">
             Sua cota
           </p>
           <h2 className="text-2xl font-semibold tracking-tight">
             Olá, {participant.name}!
           </h2>
-          <p className="text-sm leading-relaxed text-emerald-50/90">
+          <p className="text-sm leading-relaxed text-orange-50/90">
             {myItems.length > 0
               ? "Você está responsável por:"
               : participant.specialDish
@@ -117,7 +117,7 @@ export function MyQuotaCard({
                 className="rounded-2xl bg-white/10 p-4 backdrop-blur-sm"
               >
                 <p className="text-sm font-semibold text-white">{item.name}</p>
-                <p className="mt-1 text-sm text-emerald-50/90">
+                <p className="mt-1 text-sm text-orange-50/90">
                   Você leva{" "}
                   <strong className="text-base font-bold text-white">
                     1 {item.servingLabel}
@@ -132,13 +132,13 @@ export function MyQuotaCard({
 
         {participant.specialDish && (
           <div className="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
-            <p className="text-xs font-semibold uppercase tracking-wide text-emerald-100/80">
+            <p className="text-xs font-semibold uppercase tracking-wide text-orange-100/80">
               Gostosura / petisco
             </p>
             <p className="mt-1 text-sm font-semibold text-white">
               {participant.specialDish.description}
             </p>
-            <p className="mt-1 text-xs text-emerald-50/90">
+            <p className="mt-1 text-xs text-orange-50/90">
               {participant.specialDish.replacesItemName
                 ? `Substitui ${participant.specialDish.replacesItemName}.`
                 : "Adicional à mesa compartilhada."}
@@ -147,7 +147,7 @@ export function MyQuotaCard({
         )}
 
         <div className="flex flex-wrap gap-2 text-xs">
-          <span className="rounded-full bg-white/15 px-3 py-1 font-medium text-emerald-50">
+          <span className="rounded-full bg-white/15 px-3 py-1 font-medium text-orange-50">
             {participant.peopleCount}{" "}
             {participant.peopleCount === 1 ? "pessoa na sua turma" : "pessoas na sua turma"}
           </span>
@@ -165,21 +165,21 @@ export function MyQuotaCard({
         </div>
 
         {errorMessage && (
-          <p className="flex items-start gap-2 rounded-xl bg-red-950/30 px-3 py-2 text-xs text-red-100">
+          <p className="flex items-start gap-2 rounded-xl bg-orange-950/30 px-3 py-2 text-xs text-amber-100">
             <AlertTriangle className="mt-0.5 size-3.5 shrink-0" aria-hidden="true" />
             {errorMessage}
           </p>
         )}
 
         <div className="flex flex-col gap-2 border-t border-white/15 pt-4 sm:flex-row sm:items-center sm:justify-between">
-          <p className="text-xs text-emerald-50/70">
+          <p className="text-xs text-orange-50/70">
             Precisa atualizar? Use o formulário ao lado.
           </p>
           <button
             type="button"
             onClick={handleCancel}
             disabled={isCancelling}
-            className="inline-flex items-center justify-center gap-1.5 self-start rounded-lg px-3 py-2 text-xs font-semibold text-emerald-50 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
+            className="inline-flex items-center justify-center gap-1.5 self-start rounded-lg px-3 py-2 text-xs font-semibold text-orange-50 transition hover:bg-white/10 disabled:cursor-not-allowed disabled:opacity-60"
           >
             {isCancelling ? (
               <>

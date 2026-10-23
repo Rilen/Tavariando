@@ -9,7 +9,7 @@ type HeaderStatsProps = {
 
 export function HeaderStats({ stats }: HeaderStatsProps) {
   return (
-    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-br from-emerald-600 via-emerald-700 to-teal-800 px-6 py-8 text-white shadow-xl shadow-emerald-900/15 sm:px-10 sm:py-10">
+    <section className="relative overflow-hidden rounded-3xl bg-gradient-to-r from-orange-600 to-amber-600 px-6 py-8 text-white shadow-xl shadow-amber-950/15 sm:px-10 sm:py-10">
       <div
         aria-hidden="true"
         className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-white/10 blur-2xl"
@@ -22,7 +22,7 @@ export function HeaderStats({ stats }: HeaderStatsProps) {
       <div className="relative z-20 flex flex-col gap-8 md:flex-row md:items-center md:justify-between md:gap-10">
         <div className="flex-1 space-y-8">
           <div className="max-w-2xl space-y-3">
-            <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-emerald-50 backdrop-blur">
+            <span className="inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-xs font-semibold uppercase tracking-[0.18em] text-orange-50 backdrop-blur">
               <PartyPopper className="size-3.5" aria-hidden="true" />
               Almoço da família Tavariando
             </span>
@@ -31,7 +31,7 @@ export function HeaderStats({ stats }: HeaderStatsProps) {
               Vamos dividir o cardápio e multiplicar o carinho.
             </h1>
 
-            <p className="max-w-xl text-sm leading-relaxed text-emerald-50/90 sm:text-base">
+            <p className="max-w-xl text-sm leading-relaxed text-orange-50/90 sm:text-base">
               Confirme sua presença, escolha a travessa ou porção que pode levar
               e acompanhe em tempo real o que já está garantido. Assim ninguém
               fica sobrecarregado e todo mundo aproveita a confraternização.
@@ -44,7 +44,7 @@ export function HeaderStats({ stats }: HeaderStatsProps) {
                 <Users className="size-5" aria-hidden="true" />
               </span>
               <div>
-                <dt className="text-xs uppercase tracking-wide text-emerald-50/80">
+                <dt className="text-xs uppercase tracking-wide text-orange-50/80">
                   Pessoas à mesa
                 </dt>
                 <dd className="text-2xl font-semibold leading-tight">
@@ -58,7 +58,7 @@ export function HeaderStats({ stats }: HeaderStatsProps) {
                 <PartyPopper className="size-5" aria-hidden="true" />
               </span>
               <div>
-                <dt className="text-xs uppercase tracking-wide text-emerald-50/80">
+                <dt className="text-xs uppercase tracking-wide text-orange-50/80">
                   Confirmações
                 </dt>
                 <dd className="text-2xl font-semibold leading-tight">
@@ -72,7 +72,7 @@ export function HeaderStats({ stats }: HeaderStatsProps) {
                 <Utensils className="size-5" aria-hidden="true" />
               </span>
               <div>
-                <dt className="text-xs uppercase tracking-wide text-emerald-50/80">
+                <dt className="text-xs uppercase tracking-wide text-orange-50/80">
                   Pratos no cardápio
                 </dt>
                 <dd className="text-2xl font-semibold leading-tight">
@@ -82,7 +82,7 @@ export function HeaderStats({ stats }: HeaderStatsProps) {
             </div>
           </dl>
 
-          <p className="text-xs text-emerald-50/80">
+          <p className="text-xs text-orange-50/80">
             {pluralize(stats.totalConfirmados, "família confirmada", "famílias confirmadas")}
             {" · "}
             {stats.itensGarantidos} de {stats.totalItens}{" "}
@@ -94,7 +94,7 @@ export function HeaderStats({ stats }: HeaderStatsProps) {
           </p>
         </div>
 
-        <div className="hidden shrink-0 rounded-2xl border border-emerald-400/20 bg-emerald-950/40 p-2 shadow-2xl backdrop-blur-sm md:block">
+        <div className="hidden shrink-0 rounded-2xl border border-amber-400/30 bg-orange-950/50 p-2 text-amber-100 shadow-2xl backdrop-blur-sm md:block">
           <div className="relative h-[300px] w-[201px] overflow-hidden rounded-xl">
             <Image
               src="/herminio_evangelina.jpg"
@@ -105,7 +105,7 @@ export function HeaderStats({ stats }: HeaderStatsProps) {
               className="object-contain"
             />
           </div>
-          <span className="mt-1.5 block text-center text-xs font-medium tracking-wide text-emerald-100/80">
+          <span className="mt-1.5 block text-center text-xs font-medium tracking-wide text-amber-100">
             Hermínio & Evangelina
           </span>
         </div>
@@ -118,7 +118,7 @@ export function HeaderStats({ stats }: HeaderStatsProps) {
             sizes="193px"
             className="object-contain object-bottom"
           />
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-emerald-950/40" />
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-orange-950/40" />
         </div>
       </div>
     </section>

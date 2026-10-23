@@ -48,7 +48,7 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
               ? {
                   label: "Suficiente garantido",
                   className:
-                    "bg-emerald-100 text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300",
+                    "bg-orange-100 text-orange-800 dark:bg-orange-500/15 dark:text-amber-300",
                 }
               : item.suggestedServings > 0
                 ? {
@@ -73,7 +73,7 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                   needsVolunteer
                     ? "border-amber-300 bg-amber-50/70 dark:border-amber-500/40 dark:bg-amber-500/10"
                     : item.isEnough
-                      ? "border-emerald-200 bg-emerald-50/50 dark:border-emerald-500/30 dark:bg-emerald-500/5"
+                      ? "border-orange-200 bg-orange-50/50 dark:border-orange-500/30 dark:bg-orange-500/5"
                       : "border-zinc-200 bg-zinc-50/60 dark:border-zinc-800 dark:bg-zinc-950/40"
                 }`}
               >
@@ -158,7 +158,7 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                       {item.volunteers.map((volunteer) => (
                         <li
                           key={volunteer.participantId}
-                          className="rounded-lg border border-emerald-200 bg-white px-2 py-1 text-[11px] font-medium text-emerald-800 dark:border-emerald-500/30 dark:bg-zinc-900 dark:text-emerald-300"
+                          className="rounded-lg border border-orange-200 bg-white px-2 py-1 text-[11px] font-medium text-orange-800 dark:border-orange-500/30 dark:bg-zinc-900 dark:text-amber-300"
                         >
                           {volunteer.name}
                         </li>

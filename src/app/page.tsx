@@ -35,7 +35,7 @@ async function Dashboard() {
             </h2>
             <ol className="mt-4 space-y-4">
               <li className="flex gap-3">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-amber-300">
                   <Users className="size-4" aria-hidden="true" />
                 </span>
                 <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
@@ -52,7 +52,7 @@ async function Dashboard() {
                 </p>
               </li>
               <li className="flex gap-3">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-pink-100 text-pink-700 dark:bg-pink-500/15 dark:text-pink-300">
+                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
                   <HeartHandshake className="size-4" aria-hidden="true" />
                 </span>
                 <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
@@ -98,7 +98,7 @@ function DashboardLoading() {
       <p
         role="status"
         aria-live="polite"
-        className="flex items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+        className="flex items-center justify-center gap-2 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-medium text-orange-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-amber-300"
       >
         <Loader2 className="size-4 animate-spin" aria-hidden="true" />
         Carregando dados do evento...

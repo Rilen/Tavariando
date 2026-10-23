@@ -79,7 +79,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
       className="rounded-3xl border border-zinc-200 bg-white p-5 shadow-sm shadow-zinc-900/5 sm:p-7 dark:border-zinc-800 dark:bg-zinc-900"
     >
       <div className="mb-6 flex items-start gap-3">
-        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-emerald-100 text-emerald-700 dark:bg-emerald-500/15 dark:text-emerald-300">
+        <span className="flex size-11 shrink-0 items-center justify-center rounded-2xl bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-amber-300">
           <UserPlus className="size-5" aria-hidden="true" />
         </span>
         <div>
@@ -137,7 +137,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
               placeholder="Como a família te chama?"
               value={name}
               onChange={(event) => setName(event.target.value)}
-              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-emerald-400"
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-amber-400"
             />
           </div>
 
@@ -160,7 +160,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
               placeholder="(11) 99999-9999"
               value={phone}
               onChange={(event) => setPhone(event.target.value)}
-              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-emerald-500 focus:ring-2 focus:ring-emerald-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-emerald-400"
+              className="w-full rounded-xl border border-zinc-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-orange-500 focus:ring-2 focus:ring-orange-500/20 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-amber-400"
             />
           </div>
         </div>
@@ -181,8 +181,8 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
                   key={option}
                   className={`cursor-pointer rounded-xl border px-1 py-2.5 text-center text-sm font-semibold transition ${
                     isSelected
-                      ? "border-emerald-600 bg-emerald-600 text-white shadow-sm"
-                      : "border-zinc-300 bg-white text-zinc-600 hover:border-emerald-400 hover:text-emerald-700 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-emerald-500 dark:hover:text-emerald-300"
+                      ? "border-orange-400 bg-orange-500 text-white shadow-sm"
+                      : "border-zinc-300 bg-white text-zinc-600 hover:border-amber-400 hover:text-orange-700 dark:border-zinc-700 dark:bg-zinc-950 dark:text-zinc-300 dark:hover:border-orange-500 dark:hover:text-amber-300"
                   }`}
                 >
                   <input
@@ -205,7 +205,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
           </p>
         </fieldset>
 
-        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 transition hover:border-emerald-300 dark:border-zinc-800 dark:bg-zinc-950/60 dark:hover:border-emerald-700">
+        <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-zinc-200 bg-zinc-50 p-4 transition hover:border-amber-300 dark:border-zinc-800 dark:bg-zinc-950/60 dark:hover:border-orange-700">
           <input
             type="checkbox"
             name="bringsOwnDrink"
@@ -216,7 +216,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
           <span
             className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border transition ${
               bringsOwnDrink
-                ? "border-emerald-600 bg-emerald-600 text-white"
+                ? "border-orange-500 bg-orange-500 text-white"
                 : "border-zinc-300 bg-white text-transparent dark:border-zinc-600 dark:bg-zinc-900"
             }`}
           >
@@ -224,7 +224,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
           </span>
           <span>
             <span className="flex items-center gap-2 text-sm font-medium text-zinc-800 dark:text-zinc-100">
-              <Wine className="size-4 text-emerald-600 dark:text-emerald-400" aria-hidden="true" />
+              <Wine className="size-4 text-orange-600 dark:text-amber-400" aria-hidden="true" />
               Vou levar minha própria bebida
             </span>
             <span className="mt-0.5 block text-xs text-zinc-500 dark:text-zinc-400">
@@ -253,8 +253,8 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
                   key={item.id}
                   className={`group flex cursor-pointer flex-col gap-3 rounded-2xl border p-4 transition ${
                     isSelected
-                      ? "border-emerald-500 bg-emerald-50 shadow-sm dark:border-emerald-500/70 dark:bg-emerald-500/10"
-                      : "border-zinc-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/40 dark:border-zinc-800 dark:bg-zinc-950/40 dark:hover:border-emerald-700 dark:hover:bg-emerald-500/5"
+                      ? "border-orange-500 bg-orange-50 shadow-sm dark:border-orange-500/70 dark:bg-orange-500/10"
+                      : "border-zinc-200 bg-white hover:border-amber-300 hover:bg-orange-50/40 dark:border-zinc-800 dark:bg-zinc-950/40 dark:hover:border-orange-700 dark:hover:bg-orange-500/5"
                   }`}
                 >
                   <span className="flex items-start justify-between gap-3">
@@ -262,8 +262,8 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
                       <span
                         className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border transition ${
                           isSelected
-                            ? "border-emerald-600 bg-emerald-600 text-white"
-                            : "border-zinc-300 bg-white text-transparent group-hover:border-emerald-400 dark:border-zinc-600 dark:bg-zinc-900"
+                            ? "border-orange-500 bg-orange-500 text-white"
+                            : "border-zinc-300 bg-white text-transparent group-hover:border-amber-400 dark:border-zinc-600 dark:bg-zinc-900"
                         }`}
                       >
                         <Check className="size-3.5" aria-hidden="true" />
@@ -308,7 +308,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
                       )}
                     </span>
                     {item.isEnough ? (
-                      <span className="rounded-full bg-emerald-100 px-2 py-0.5 text-[11px] font-semibold text-emerald-800 dark:bg-emerald-500/15 dark:text-emerald-300">
+                      <span className="rounded-full bg-orange-100 px-2 py-0.5 text-[11px] font-semibold text-orange-800 dark:bg-orange-500/15 dark:text-amber-300">
                         Suficiente garantido
                       </span>
                     ) : item.suggestedServings > 0 ? (
@@ -405,8 +405,8 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
             aria-live="polite"
             className={`flex items-start gap-2 rounded-xl border px-3.5 py-3 text-sm ${
               state.status === "success"
-                ? "border-emerald-200 bg-emerald-50 text-emerald-800 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
-                : "border-red-200 bg-red-50 text-red-800 dark:border-red-500/30 dark:bg-red-500/10 dark:text-red-300"
+                ? "border-orange-200 bg-orange-50 text-orange-800 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-amber-300"
+                : "border-amber-200 bg-amber-50 text-orange-800 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-amber-300"
             }`}
           >
             {state.status === "success" && (
@@ -423,7 +423,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
           <button
             type="submit"
             disabled={isPending}
-            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-emerald-600 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-emerald-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto dark:focus-visible:ring-offset-zinc-900"
+            className="inline-flex w-full items-center justify-center gap-2 rounded-xl bg-orange-500 px-5 py-3 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto dark:focus-visible:ring-offset-zinc-900"
           >
             {isPending ? (
               <>

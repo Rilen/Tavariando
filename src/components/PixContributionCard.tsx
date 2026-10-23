@@ -64,7 +64,7 @@ export function PixContributionCard() {
               type="button"
               onClick={handleCopy}
               disabled={!PIX_KEY}
-              className="inline-flex items-center justify-center gap-2 rounded-xl bg-amber-600 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-amber-700 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-500 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-offset-zinc-900"
+              className="inline-flex items-center justify-center gap-2 rounded-xl border border-amber-400 bg-orange-500 px-4 py-2.5 text-sm font-semibold text-white shadow-sm transition hover:bg-orange-600 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-amber-400 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-60 dark:focus-visible:ring-offset-zinc-900"
             >
               {copied ? (
                 <>
@@ -91,7 +91,7 @@ export function PixContributionCard() {
           </div>
 
           {copyError && (
-            <p className="text-xs text-red-700 dark:text-red-300">
+            <p className="text-xs text-orange-700 dark:text-amber-300">
               Não foi possível copiar automaticamente. Selecione a chave acima.
             </p>
           )}
