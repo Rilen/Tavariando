@@ -57,8 +57,8 @@ async function Dashboard() {
                 </span>
                 <p className="text-sm leading-relaxed text-zinc-600 dark:text-zinc-300">
                   A cota de cada família é recalculada automaticamente. Todo
-                  mundo leva uma travessa, ninguém leva tudo. Pratos especiais
-                  e frutas entram na mesa compartilhada.
+                  mundo leva uma travessa, ninguém leva tudo. Gostosuras, frutas
+                  e petiscos entram na mesa compartilhada.
                 </p>
               </li>
             </ol>

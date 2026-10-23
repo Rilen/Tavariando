@@ -97,7 +97,7 @@ export function MyQuotaCard({
             {myItems.length > 0
               ? "Você está responsável por:"
               : participant.specialDish
-                ? "Seu prato especial já está na mesa:"
+                ? "Sua gostosura já está na mesa:"
                 : "Você confirmou presença, mas ainda não assumiu nenhum item. Escolha algo no cardápio ao lado."}
           </p>
         </div>
@@ -126,7 +126,7 @@ export function MyQuotaCard({
         {participant.specialDish && (
           <div className="rounded-2xl bg-white/10 p-4 backdrop-blur-sm">
             <p className="text-xs font-semibold uppercase tracking-wide text-emerald-100/80">
-              Prato especial
+              Gostosura / petisco
             </p>
             <p className="mt-1 text-sm font-semibold text-white">
               {participant.specialDish.description}

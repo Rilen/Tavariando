@@ -298,7 +298,7 @@ export async function registerOrUpdateParticipant(
   if (specialDishDescription.length > 200) {
     return {
       status: "error",
-      message: "A descrição do prato especial pode ter no máximo 200 caracteres.",
+      message: "A descrição do prato adicional pode ter no máximo 200 caracteres.",
     };
   }
 
@@ -306,7 +306,7 @@ export async function registerOrUpdateParticipant(
     return {
       status: "error",
       message:
-        "Descreva o prato especial que você vai levar para indicar qual item ele substitui.",
+        "Descreva o prato adicional, doce, fruta ou petisco que você vai levar para indicar qual item ele substitui.",
     };
   }
 

@@ -313,11 +313,11 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
         <fieldset className="space-y-4 rounded-2xl border border-amber-200 bg-amber-50/60 p-4 dark:border-amber-500/30 dark:bg-amber-500/10">
           <legend className="flex items-center gap-2 px-1 text-sm font-semibold text-amber-950 dark:text-amber-100">
             <Sparkles className="size-4" aria-hidden="true" />
-            Vai levar algo especial ou frutas da sua preferência?
+            Quer levar algum prato adicional, doce, fruta ou petisco?
           </legend>
           <p className="text-xs leading-relaxed text-amber-900/80 dark:text-amber-100/80">
-            Salpicão, torta, melancia, cacho de banana... conte para a família e
-            combine se isso entra no lugar de um prato básico.
+            Conte para a família o que você vai levar e combine se isso entra no
+            lugar de um item básico.
           </p>
 
           <div className="space-y-2">
@@ -325,7 +325,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
               htmlFor="special-dish-description"
               className="text-sm font-medium text-amber-950 dark:text-amber-100"
             >
-              O que você vai levar?
+              Descreva o que você vai levar
             </label>
             <textarea
               id="special-dish-description"
@@ -336,7 +336,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
               onChange={(event) =>
                 setSpecialDishDescription(event.target.value)
               }
-              placeholder="Ex: 1 travessa de salpicão caseiro, 1 cacho de banana, 1 melancia, torta de limão"
+              placeholder="(Ex: Salpicão, pipoca, bolo, pavê, torta, melancia, etc.)"
               className="w-full resize-y rounded-xl border border-amber-300 bg-white px-3.5 py-2.5 text-sm text-zinc-900 shadow-sm outline-none transition placeholder:text-zinc-400 focus:border-amber-500 focus:ring-2 focus:ring-amber-500/20 dark:border-amber-500/40 dark:bg-zinc-950 dark:text-zinc-50 dark:placeholder:text-zinc-500 dark:focus:border-amber-400"
             />
           </div>
@@ -366,8 +366,8 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
             </select>
             {specialDishReplacesItemId && (
               <p className="text-xs text-amber-800 dark:text-amber-200">
-                Esse item sai da sua lista de pratos básicos; o especial entra
-                na mesa compartilhada.
+                Esse item sai da sua lista de pratos básicos; o prato adicional
+                entra na mesa compartilhada.
               </p>
             )}
           </div>

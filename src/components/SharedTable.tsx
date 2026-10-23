@@ -17,19 +17,19 @@ export function SharedTable({ specialDishes }: SharedTableProps) {
         </span>
         <div>
           <h2 className="text-lg font-semibold tracking-tight text-zinc-900 dark:text-zinc-50">
-            Mesa Compartilhada & Frutas
+            Mesa de Gostosuras, Frutas & Petiscos
           </h2>
           <p className="text-sm text-zinc-500 dark:text-zinc-400">
-            Pratos especiais, salpicões e frutas que a família já prometeu
-            levar.
+            Pratos adicionais, salpicões, doces e frutas que a família já
+            prometeu levar.
           </p>
         </div>
       </div>
 
       {specialDishes.length === 0 ? (
         <p className="rounded-2xl border border-dashed border-zinc-300 p-6 text-center text-sm text-zinc-500 dark:border-zinc-700 dark:text-zinc-400">
-          Ninguém prometeu um prato especial ainda. Seja o primeiro a
-          complementar a mesa!
+          Ninguém prometeu uma gostosura, fruta ou petisco ainda. Seja o
+          primeiro a complementar a mesa!
         </p>
       ) : (
         <ul className="divide-y divide-zinc-100 dark:divide-zinc-800">

@@ -42,9 +42,10 @@ export function PixContributionCard() {
             Ajuda de Custo do Encontro (Luz, Limpeza e Infra)
           </h2>
           <p className="text-sm leading-relaxed text-amber-900/80 dark:text-amber-100/80">
-            Para ajudar com os custos do espaço e da organização (luz, gás,
-            aluguel de mesas e cadeiras, limpeza e despesas gerais), qualquer
-            valor é muito bem-vindo e fica a critério de cada um!
+            Para ajudar com os custos do espaço e da infraestrutura (luz, gás,
+            aluguel de mesas, cadeiras, limpeza e, se alcançarmos uma boa
+            ajuda, o tão sonhado pula-pula para a criançada!), qualquer valor é
+            muito bem-vindo e fica a critério de cada um!
           </p>
         </div>
 
