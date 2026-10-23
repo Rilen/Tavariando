@@ -1,5 +1,6 @@
 import { Suspense } from "react";
-import { HeartHandshake, ListChecks, Users } from "lucide-react";
+import { connection } from "next/server";
+import { HeartHandshake, ListChecks, Loader2, Users } from "lucide-react";
 import { getDashboardData } from "@/app/actions/event";
 import { ConfirmationForm } from "@/components/ConfirmationForm";
 import { DashboardItems } from "@/components/DashboardItems";
@@ -7,6 +8,7 @@ import { HeaderStats } from "@/components/HeaderStats";
 import { MyQuotaCard } from "@/components/MyQuotaCard";
 
 async function Dashboard() {
+  await connection();
   const data = await getDashboardData();
 
   return (
@@ -82,10 +84,26 @@ function DashboardSkeleton() {
   );
 }
 
+function DashboardLoading() {
+  return (
+    <div className="space-y-6">
+      <p
+        role="status"
+        aria-live="polite"
+        className="flex items-center justify-center gap-2 rounded-2xl border border-emerald-200 bg-emerald-50 px-4 py-3 text-sm font-medium text-emerald-700 dark:border-emerald-500/30 dark:bg-emerald-500/10 dark:text-emerald-300"
+      >
+        <Loader2 className="size-4 animate-spin" aria-hidden="true" />
+        Carregando dados do evento...
+      </p>
+      <DashboardSkeleton />
+    </div>
+  );
+}
+
 export default function Home() {
   return (
     <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
-      <Suspense fallback={<DashboardSkeleton />}>
+      <Suspense fallback={<DashboardLoading />}>
         <Dashboard />
       </Suspense>
 

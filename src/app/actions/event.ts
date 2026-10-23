@@ -1,7 +1,6 @@
 "use server";
 
 import { revalidatePath } from "next/cache";
-import { connection } from "next/server";
 import { prisma } from "@/lib/prisma";
 
 const CATEGORY_ORDER = ["COMIDA", "BEBIDA", "SOBREMESA", "DESCARTAVEL"];
@@ -52,8 +51,6 @@ export type ActionState = {
 };
 
 export async function getDashboardData(): Promise<DashboardData> {
-  await connection();
-
   const [participants, foodItems] = await Promise.all([
     prisma.participant.findMany({
       where: { confirmed: true },
