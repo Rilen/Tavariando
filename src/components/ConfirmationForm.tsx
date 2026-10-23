@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useState, useSyncExternalStore } from "react";
+import { useActionState, useEffect, useState } from "react";
 import {
   Check,
   CheckCircle2,
@@ -19,12 +19,7 @@ import {
   formatQuantity,
   pluralize,
 } from "@/lib/format";
-import {
-  getServerParticipantId,
-  getStoredParticipantId,
-  storeParticipantId,
-  subscribeToParticipantChanges,
-} from "@/lib/participant-storage";
+import { storeParticipantId, useParticipantId } from "@/lib/participant-storage";
 
 type ConfirmationFormProps = {
   items: DashboardItem[];
@@ -39,11 +34,7 @@ export function ConfirmationForm({ items }: ConfirmationFormProps) {
     initialState,
   );
 
-  const storedParticipantId = useSyncExternalStore(
-    subscribeToParticipantChanges,
-    getStoredParticipantId,
-    getServerParticipantId,
-  );
+  const storedParticipantId = useParticipantId();
 
   const [name, setName] = useState("");
   const [phone, setPhone] = useState("");

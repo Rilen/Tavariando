@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import {
   AlertTriangle,
   Loader2,
@@ -14,12 +14,7 @@ import {
   type DashboardParticipant,
 } from "@/app/actions/event";
 import { formatQuantity } from "@/lib/format";
-import {
-  clearStoredParticipantId,
-  getServerParticipantId,
-  getStoredParticipantId,
-  subscribeToParticipantChanges,
-} from "@/lib/participant-storage";
+import { clearStoredParticipantId, useParticipantId } from "@/lib/participant-storage";
 
 type MyQuotaCardProps = {
   participants: DashboardParticipant[];
@@ -32,11 +27,7 @@ export function MyQuotaCard({
   items,
   totalPessoas,
 }: MyQuotaCardProps) {
-  const participantId = useSyncExternalStore(
-    subscribeToParticipantChanges,
-    getStoredParticipantId,
-    getServerParticipantId,
-  );
+  const participantId = useParticipantId();
   const [isCancelling, setIsCancelling] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
 
