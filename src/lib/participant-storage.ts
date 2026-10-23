@@ -1,7 +1,12 @@
 export const PARTICIPANT_STORAGE_KEY = "tavariando:participant-id";
 export const PARTICIPANT_CHANGED_EVENT = "tavariando:participant-changed";
 
-export function getStoredParticipantId(): string | null {
+const SERVER_PARTICIPANT_ID = null;
+let cachedParticipantId: string | null | undefined;
+
+function readStoredParticipantId(): string | null {
+  if (typeof window === "undefined") return null;
+
   try {
     return window.localStorage.getItem(PARTICIPANT_STORAGE_KEY);
   } catch {
@@ -9,21 +14,36 @@ export function getStoredParticipantId(): string | null {
   }
 }
 
+export function getStoredParticipantId(): string | null {
+  if (cachedParticipantId === undefined) {
+    cachedParticipantId = readStoredParticipantId();
+  }
+
+  return cachedParticipantId;
+}
+
 export function getServerParticipantId(): string | null {
-  return null;
+  return SERVER_PARTICIPANT_ID;
 }
 
 export function subscribeToParticipantChanges(onChange: () => void) {
-  window.addEventListener(PARTICIPANT_CHANGED_EVENT, onChange);
-  window.addEventListener("storage", onChange);
+  function handleStoreChange() {
+    cachedParticipantId = readStoredParticipantId();
+    onChange();
+  }
+
+  window.addEventListener(PARTICIPANT_CHANGED_EVENT, handleStoreChange);
+  window.addEventListener("storage", handleStoreChange);
 
   return () => {
-    window.removeEventListener(PARTICIPANT_CHANGED_EVENT, onChange);
-    window.removeEventListener("storage", onChange);
+    window.removeEventListener(PARTICIPANT_CHANGED_EVENT, handleStoreChange);
+    window.removeEventListener("storage", handleStoreChange);
   };
 }
 
 export function storeParticipantId(participantId: string) {
+  cachedParticipantId = participantId;
+
   try {
     window.localStorage.setItem(PARTICIPANT_STORAGE_KEY, participantId);
   } catch {
@@ -34,6 +54,8 @@ export function storeParticipantId(participantId: string) {
 }
 
 export function clearStoredParticipantId() {
+  cachedParticipantId = null;
+
   try {
     window.localStorage.removeItem(PARTICIPANT_STORAGE_KEY);
   } catch {
