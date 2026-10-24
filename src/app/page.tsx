@@ -8,6 +8,7 @@ import { HeaderStats } from "@/components/HeaderStats";
 import { MyQuotaCard } from "@/components/MyQuotaCard";
 import { PixContributionCard } from "@/components/PixContributionCard";
 import { SharedTable } from "@/components/SharedTable";
+import { OurStorySection } from "@/components/OurStorySection";
 
 async function Dashboard() {
   await connection();
@@ -41,6 +42,8 @@ async function Dashboard() {
       />
 
       <SharedTable specialDishes={data.specialDishes} />
+
+      <OurStorySection />
 
       <PixContributionCard />
     </div>

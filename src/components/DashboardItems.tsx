@@ -22,7 +22,12 @@ type DashboardItemsProps = {
   totalPessoas: number;
 };
 
-type CategoryFilter = "TODOS" | "COMIDA" | "SOBREMESA" | "DESCARTAVEL";
+type CategoryFilter =
+  | "TODOS"
+  | "SEM_VOLUNTARIOS"
+  | "COMIDA"
+  | "SOBREMESA"
+  | "DESCARTAVEL";
 
 const DISPLAY_CATEGORIES = ["COMIDA", "SOBREMESA", "DESCARTAVEL"] as const;
 
@@ -33,11 +38,19 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
   const currentParticipantId = session?.participantId;
 
   const hasConfirmations = totalPessoas > 0;
+  const itemsWithoutVolunteersCount = items.filter(
+    (item) => item.qtdVoluntarios === 0,
+  ).length;
+
+  const filteredItems =
+    selectedCategory === "SEM_VOLUNTARIOS"
+      ? items.filter((item) => item.qtdVoluntarios === 0)
+      : items;
 
   const categoriesToRender =
-    selectedCategory === "TODOS"
+    selectedCategory === "TODOS" || selectedCategory === "SEM_VOLUNTARIOS"
       ? DISPLAY_CATEGORIES.filter((cat) =>
-          items.some((item) => item.category === cat),
+          filteredItems.some((item) => item.category === cat),
         )
       : [selectedCategory];
 
@@ -83,6 +96,13 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
             {(
               [
                 { id: "TODOS", label: "Todos" },
+                {
+                  id: "SEM_VOLUNTARIOS",
+                  label:
+                    itemsWithoutVolunteersCount > 0
+                      ? `Sem voluntários (${itemsWithoutVolunteersCount})`
+                      : "Sem voluntários",
+                },
                 { id: "COMIDA", label: "Comidas" },
                 { id: "SOBREMESA", label: "Sobremesas" },
                 { id: "DESCARTAVEL", label: "Descartáveis e infraestrutura" },
@@ -142,10 +162,17 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
         <p className="mt-6 rounded-2xl border border-dashed border-orange-200 p-6 text-center text-sm text-stone-600">
           Nenhum item cadastrado no cardápio ainda.
         </p>
+      ) : filteredItems.length === 0 && selectedCategory === "SEM_VOLUNTARIOS" ? (
+        <div className="mt-6 rounded-2xl border border-emerald-200 bg-emerald-50/70 p-6 text-center text-sm text-emerald-950">
+          <p className="font-bold">Que maravilha!</p>
+          <p className="mt-1 text-xs text-emerald-800">
+            Todos os itens do cardápio já possuem ao menos um voluntário garantido.
+          </p>
+        </div>
       ) : (
         <div className="mt-6 space-y-7">
           {categoriesToRender.map((categoryKey) => {
-            const categoryItems = items.filter(
+            const categoryItems = filteredItems.filter(
               (item) => item.category === categoryKey,
             );
             if (categoryItems.length === 0) return null;
@@ -232,9 +259,16 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                       >
                         <div className="space-y-2">
                           <div className="flex items-start justify-between gap-3">
-                            <h4 className="text-sm font-bold leading-snug text-orange-950">
-                              {item.name}
-                            </h4>
+                            <div className="flex flex-wrap items-center gap-1.5">
+                              <h4 className="text-sm font-bold leading-snug text-orange-950">
+                                {item.name}
+                              </h4>
+                              {isConfirmedWithoutVolunteers && (
+                                <span className="inline-flex items-center rounded-md border border-amber-300/80 bg-amber-100/90 px-1.5 py-0.5 text-[10px] font-bold text-amber-950">
+                                  Sem voluntário
+                                </span>
+                              )}
+                            </div>
 
                             <span
                               className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${stateBadge.className}`}

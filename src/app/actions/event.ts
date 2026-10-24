@@ -442,8 +442,8 @@ export async function registerOrUpdateParticipant(
           ? `Tudo certo, ${result.participant.name}! Sua contribuição no cardápio foi salva.`
           : `Tudo certo, ${result.participant.name}! Sua presença continua confirmada e você pode escolher um prato quando quiser.`
         : formScope === "presence" && !hasChosenContribution
-          ? `Presença confirmada, ${result.participant.name}! Agora, se quiser, você pode escolher o que levar.`
-          : `Tudo certo, ${result.participant.name}! Sua confirmação foi registrada.`;
+          ? `Tudo pronto, ${result.participant.name}! Agora, se quiser, você pode escolher o que levar.`
+          : `Tudo pronto, ${result.participant.name}! Sua confirmação foi registrada.`;
 
     return {
       status: "success",

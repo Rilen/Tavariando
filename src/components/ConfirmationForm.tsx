@@ -398,12 +398,12 @@ export function ConfirmationForm({
                   label:
                     item.suggestedServings > 0
                       ? `Sem voluntários · faltam ${item.suggestedServings}`
-                      : "Precisa de voluntário",
+                      : "Sem voluntários",
                   className: "bg-amber-100 text-amber-950 border-amber-300",
                 };
               } else {
                 statusBadge = {
-                  label: `Faltam ${item.missingServings} ${
+                  label: `Cobertura parcial · Faltam ${item.missingServings} ${
                     item.missingServings === 1
                       ? item.servingLabel
                       : item.servingLabelPlural
@@ -652,17 +652,25 @@ export function ConfirmationForm({
             )}
           </span>
           <div>
-            <h2
-              id="confirmacao-heading"
-              className="text-lg font-bold tracking-tight text-orange-950 sm:text-xl"
-            >
-              {isConfirmedParticipant
-                ? `Participação de ${activeParticipant?.name ?? (name || "sua família")}`
-                : "Confirme sua presença no almoço"}
-            </h2>
+            <div className="flex flex-wrap items-center gap-2">
+              <h2
+                id="confirmacao-heading"
+                className="text-lg font-bold tracking-tight text-orange-950 sm:text-xl"
+              >
+                {isConfirmedParticipant
+                  ? `Participação de ${activeParticipant?.name ?? (name || "sua família")}`
+                  : "Confirme sua presença no almoço"}
+              </h2>
+              {isConfirmedParticipant && (
+                <span className="inline-flex items-center gap-1 rounded-full border border-emerald-300 bg-emerald-100 px-2.5 py-0.5 text-[11px] font-bold text-emerald-900">
+                  <Check className="size-3 text-emerald-700" aria-hidden="true" />
+                  Presença confirmada
+                </span>
+              )}
+            </div>
             <p className="mt-0.5 text-sm leading-relaxed text-stone-600">
               {isConfirmedParticipant
-                ? "Escolha ou atualize o que vai levar, ou ajuste seus acompanhantes quando precisar."
+                ? "Que alegria ter você com a gente! Escolha ou atualize o que vai levar, ou ajuste seus acompanhantes quando precisar."
                 : "Passo 1: avise quem vem com você. Não é preciso escolher um prato agora."}
             </p>
           </div>
@@ -763,6 +771,11 @@ export function ConfirmationForm({
               />
             )}
             <div className="flex-1 space-y-2">
+              {activeActionState.status === "success" && (
+                <p className="text-base font-bold text-emerald-950 sm:text-lg">
+                  Que alegria! Sua presença está confirmada!
+                </p>
+              )}
               <p className="font-semibold leading-relaxed">
                 {activeActionState.message}
               </p>
@@ -884,51 +897,78 @@ export function ConfirmationForm({
               </div>
             </div>
 
-            <fieldset className="space-y-3 rounded-2xl border border-orange-200/80 bg-orange-50/40 p-4">
-              <div className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between">
-                <div>
-                  <legend className="text-sm font-bold text-orange-950">
-                    Quantos acompanhantes vêm com você?
-                  </legend>
-                  <p className="text-xs text-stone-600">
-                    Conte adultos e crianças que vêm na sua turma (sem contar
-                    você).
-                  </p>
-                </div>
-
-                <span
-                  aria-live="polite"
-                  className="inline-flex items-center gap-1.5 self-start rounded-full bg-orange-800 px-3.5 py-1 text-xs font-bold text-white shadow-sm sm:self-auto"
-                >
-                  Total: {pluralize(totalGroupPeople, "pessoa", "pessoas")}
-                </span>
+            <fieldset className="space-y-4 rounded-2xl border border-orange-200/80 bg-orange-50/40 p-4 sm:p-5">
+              <div className="space-y-1">
+                <legend className="text-sm font-bold text-orange-950 sm:text-base">
+                  Quantos acompanhantes vêm com você?
+                </legend>
+                <p className="text-xs leading-relaxed text-stone-600">
+                  Conte adultos e crianças da sua família (sem contar você).
+                </p>
               </div>
 
-              <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
-                {QUICK_DEPENDENT_OPTIONS.map((option) => {
-                  const isSelected = dependentsCount === option;
+              {/* Distinction breakdown card */}
+              <div
+                aria-live="polite"
+                className="grid grid-cols-3 gap-2 rounded-xl border border-orange-200/80 bg-white/90 p-2.5 text-center shadow-xs"
+              >
+                <div className="rounded-lg bg-orange-50/80 px-2 py-1.5">
+                  <span className="block text-[11px] font-semibold text-stone-500 uppercase tracking-wider">
+                    Titular
+                  </span>
+                  <span className="block text-sm font-bold text-orange-950">
+                    Você (1)
+                  </span>
+                </div>
+                <div className="rounded-lg bg-orange-50/80 px-2 py-1.5">
+                  <span className="block text-[11px] font-semibold text-stone-500 uppercase tracking-wider">
+                    Acompanhantes
+                  </span>
+                  <span className="block text-sm font-bold text-orange-950">
+                    +{dependentsCount}
+                  </span>
+                </div>
+                <div className="rounded-lg bg-orange-800 px-2 py-1.5 text-white shadow-xs">
+                  <span className="block text-[11px] font-semibold text-orange-100 uppercase tracking-wider">
+                    Total à mesa
+                  </span>
+                  <span className="block text-sm font-extrabold text-white">
+                    {pluralize(totalGroupPeople, "pessoa", "pessoas")}
+                  </span>
+                </div>
+              </div>
 
-                  return (
-                    <label
-                      key={option}
-                      className={`flex min-h-11 cursor-pointer items-center justify-center rounded-xl border px-2 py-2.5 text-center text-sm font-bold transition has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-orange-700 has-[:focus-visible]:ring-offset-2 ${
-                        isSelected
-                          ? "border-orange-800 bg-orange-800 text-white shadow-sm"
-                          : "border-orange-200 bg-white text-stone-800 hover:border-orange-400 hover:bg-orange-50"
-                      }`}
-                    >
-                      <input
-                        type="radio"
-                        name="dependentsCountRadio"
-                        value={option}
-                        checked={isSelected}
-                        onChange={() => setDependentsCount(option)}
-                        className="sr-only"
-                      />
-                      {option === 0 ? "Só eu (0)" : `+${option}`}
-                    </label>
-                  );
-                })}
+              {/* Quick options 0 to 5 */}
+              <div className="space-y-2">
+                <span className="block text-xs font-semibold text-stone-700">
+                  Escolha rápida de acompanhantes:
+                </span>
+                <div className="grid grid-cols-3 gap-2 sm:grid-cols-6">
+                  {QUICK_DEPENDENT_OPTIONS.map((option) => {
+                    const isSelected = dependentsCount === option;
+
+                    return (
+                      <label
+                        key={option}
+                        className={`flex min-h-12 cursor-pointer items-center justify-center rounded-xl border px-2 py-2.5 text-center text-sm font-bold transition has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-orange-700 has-[:focus-visible]:ring-offset-2 ${
+                          isSelected
+                            ? "border-orange-800 bg-orange-800 text-white shadow-sm"
+                            : "border-orange-200 bg-white text-stone-800 hover:border-orange-400 hover:bg-orange-50"
+                        }`}
+                      >
+                        <input
+                          type="radio"
+                          name="dependentsCountRadio"
+                          value={option}
+                          checked={isSelected}
+                          onChange={() => setDependentsCount(option)}
+                          className="sr-only"
+                        />
+                        {option === 0 ? "Só eu (0)" : `+${option}`}
+                      </label>
+                    );
+                  })}
+                </div>
               </div>
 
               <input
@@ -937,42 +977,45 @@ export function ConfirmationForm({
                 value={dependentsCount}
               />
 
-              <div className="flex flex-wrap items-center justify-between gap-2 pt-1 text-xs text-stone-700">
-                <span>
+              {/* Fine tuning / more than 5 */}
+              <div className="flex flex-col gap-2 rounded-xl border border-orange-200/70 bg-white/70 p-3 sm:flex-row sm:items-center sm:justify-between">
+                <span className="text-xs text-stone-700 font-medium">
                   {dependentsCount === 0
-                    ? "Você vem sozinho(a) — 1 pessoa no total."
+                    ? "Você vem sozinho(a) — 1 lugar à mesa."
                     : `Você + ${pluralize(dependentsCount, "acompanhante", "acompanhantes")} = ${pluralize(totalGroupPeople, "pessoa", "pessoas")} à mesa.`}
                 </span>
 
-                <div className="flex items-center gap-1.5">
-                  <span className="text-xs font-medium text-stone-600">
-                    Mais de 5?
+                <div className="flex items-center justify-between gap-3 sm:justify-end">
+                  <span className="text-xs font-semibold text-stone-700">
+                    Ajuste fino (ou mais de 5):
                   </span>
-                  <button
-                    type="button"
-                    aria-label="Diminuir acompanhantes"
-                    disabled={dependentsCount <= 0}
-                    onClick={() =>
-                      setDependentsCount((prev) => Math.max(0, prev - 1))
-                    }
-                    className="inline-flex size-8 items-center justify-center rounded-lg border border-orange-200 bg-white text-stone-800 transition hover:bg-orange-100 disabled:opacity-40"
-                  >
-                    <Minus className="size-3.5" aria-hidden="true" />
-                  </button>
-                  <span className="min-w-7 text-center font-bold text-orange-950">
-                    +{dependentsCount}
-                  </span>
-                  <button
-                    type="button"
-                    aria-label="Aumentar acompanhantes"
-                    disabled={dependentsCount >= 20}
-                    onClick={() =>
-                      setDependentsCount((prev) => Math.min(20, prev + 1))
-                    }
-                    className="inline-flex size-8 items-center justify-center rounded-lg border border-orange-200 bg-white text-stone-800 transition hover:bg-orange-100 disabled:opacity-40"
-                  >
-                    <Plus className="size-3.5" aria-hidden="true" />
-                  </button>
+                  <div className="flex items-center gap-1.5">
+                    <button
+                      type="button"
+                      aria-label="Diminuir um acompanhante"
+                      disabled={dependentsCount <= 0}
+                      onClick={() =>
+                        setDependentsCount((prev) => Math.max(0, prev - 1))
+                      }
+                      className="inline-flex size-11 items-center justify-center rounded-xl border border-orange-300 bg-white text-stone-800 shadow-2xs transition hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-700 disabled:opacity-40"
+                    >
+                      <Minus className="size-4" aria-hidden="true" />
+                    </button>
+                    <span className="min-w-8 text-center text-sm font-extrabold text-orange-950">
+                      +{dependentsCount}
+                    </span>
+                    <button
+                      type="button"
+                      aria-label="Aumentar um acompanhante"
+                      disabled={dependentsCount >= 20}
+                      onClick={() =>
+                        setDependentsCount((prev) => Math.min(20, prev + 1))
+                      }
+                      className="inline-flex size-11 items-center justify-center rounded-xl border border-orange-300 bg-white text-stone-800 shadow-2xs transition hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-700 disabled:opacity-40"
+                    >
+                      <Plus className="size-4" aria-hidden="true" />
+                    </button>
+                  </div>
                 </div>
               </div>
             </fieldset>

@@ -579,4 +579,127 @@ describe("Tavariando — Fluxo de Confirmação, Contribuição e Segurança", (
     assert.equal(sixth.status, "error");
     assert.match(sixth.message, /Muitas tentativas/);
   });
+
+  it("F02: Confirmação acolhedora — mensagem afetuosa de presença confirmada retornada pelo servidor", async () => {
+    resetRateLimits();
+    const res = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "presence",
+        name: "Tia Claret",
+        dependentsCount: "1",
+      }),
+    );
+
+    assert.equal(res.status, "success");
+    assert.ok(res.participantId);
+    assert.ok(res.participantToken);
+    assert.equal(res.participantName, "Tia Claret");
+    assert.match(res.message, /Tudo pronto, Tia Claret!/);
+  });
+
+  it("F03: Seletor de acompanhantes — persistência exata da contagem de dependentes e pessoas", async () => {
+    resetRateLimits();
+    // Test solo participant (0 dependents = 1 person)
+    const solo = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "presence",
+        name: "Tio Solo",
+        dependentsCount: "0",
+      }),
+    );
+    assert.equal(solo.status, "success");
+    const soloRecord = await prisma.participant.findUnique({
+      where: { id: solo.participantId },
+    });
+    assert.equal(soloRecord?.dependentsCount, 0);
+
+    // Test family group (5 dependents = 6 people)
+    const family = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "presence",
+        name: "Família Silva",
+        dependentsCount: "5",
+      }),
+    );
+    assert.equal(family.status, "success");
+    const familyRecord = await prisma.participant.findUnique({
+      where: { id: family.participantId },
+    });
+    assert.equal(familyRecord?.dependentsCount, 5);
+  });
+
+  it("F04: Destaque de pratos sem voluntários — identificação de itens sem voluntário vs com voluntários", async () => {
+    resetRateLimits();
+    // Arroz gets 1 volunteer; Farofa and Salada have 0 volunteers
+    const res = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "full",
+        name: "Voluntário Arroz",
+        dependentsCount: "0",
+        selectedFoodItemIds: [arrozId],
+      }),
+    );
+    assert.equal(res.status, "success");
+
+    const arrozVolunteers = await prisma.itemAssignment.count({
+      where: { foodItemId: arrozId, participant: { confirmed: true } },
+    });
+    const farofaVolunteers = await prisma.itemAssignment.count({
+      where: { foodItemId: farofaId, participant: { confirmed: true } },
+    });
+
+    assert.equal(arrozVolunteers, 1);
+    assert.equal(farofaVolunteers, 0);
+  });
+
+  it("F01: Segurança da sessão — recuperação/edição exige token criptográfico válido e rejeita falsificação por nome", async () => {
+    resetRateLimits();
+    // Create participant legitimately
+    const original = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "presence",
+        name: "Primo Legítimo",
+        dependentsCount: "2",
+      }),
+    );
+    assert.equal(original.status, "success");
+    const legitimateId = original.participantId!;
+    const legitimateToken = original.participantToken!;
+
+    // Attempt to hijack / update existing participant with a forged token
+    const hijackedAttempt = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "presence",
+        participantId: legitimateId,
+        participantToken: "forged-invalid-session-token-1234567890abcdef",
+        name: "Invasor Malicioso",
+        dependentsCount: "0",
+      }),
+    );
+    assert.equal(hijackedAttempt.status, "error");
+    assert.match(hijackedAttempt.message, /Sua sessão expirou ou não pôde ser validada/);
+
+    // Verify original record is unchanged
+    const unchanged = await prisma.participant.findUnique({
+      where: { id: legitimateId },
+    });
+    assert.equal(unchanged?.name, "Primo Legítimo");
+    assert.equal(unchanged?.dependentsCount, 2);
+
+    // Legitimate update with true token succeeds
+    const legitimateUpdate = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "presence",
+        participantId: legitimateId,
+        participantToken: legitimateToken,
+        name: "Primo Legítimo",
+        dependentsCount: "3",
+      }),
+    );
+    assert.equal(legitimateUpdate.status, "success");
+    const updated = await prisma.participant.findUnique({
+      where: { id: legitimateId },
+    });
+    assert.equal(updated?.dependentsCount, 3);
+  });
 });
