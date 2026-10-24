@@ -45,3 +45,7 @@ export function checkRateLimit(
   bucket.count += 1;
   return { allowed: true, retryAfterMs: 0 };
 }
+
+export function resetRateLimits(): void {
+  buckets.clear();
+}

@@ -1,6 +1,6 @@
 import { Suspense } from "react";
 import { connection } from "next/server";
-import { HeartHandshake, ListChecks, Loader2, Users } from "lucide-react";
+import { Loader2 } from "lucide-react";
 import { getDashboardData } from "@/lib/dashboard-data";
 import { ConfirmationForm } from "@/components/ConfirmationForm";
 import { DashboardItems } from "@/components/DashboardItems";
@@ -14,63 +14,35 @@ async function Dashboard() {
   const data = await getDashboardData();
 
   return (
-    <div className="space-y-6">
-      <HeaderStats stats={data.stats} />
+    <div className="space-y-6 sm:space-y-8">
+      <HeaderStats stats={data.stats} participants={data.participants} />
 
       <div className="grid items-start gap-6 lg:grid-cols-5">
-        <div className="lg:col-span-3">
-          <ConfirmationForm items={data.items} />
+        <div className="min-w-0 lg:col-span-3">
+          <ConfirmationForm
+            items={data.items}
+            participants={data.participants}
+            totalPessoas={data.stats.totalPessoas}
+          />
         </div>
 
-        <aside className="space-y-6 lg:sticky lg:top-6 lg:col-span-2">
+        <aside className="min-w-0 space-y-6 has-[[data-participant-confirmed=true]]:order-first lg:col-span-2 lg:sticky lg:top-6 lg:has-[[data-participant-confirmed=true]]:order-none">
           <MyQuotaCard
             participants={data.participants}
             items={data.items}
             totalPessoas={data.stats.totalPessoas}
           />
-
-          <section className="rounded-3xl border border-orange-100 bg-white p-6 shadow-md shadow-orange-950/5 dark:border-orange-900 dark:bg-orange-950">
-            <h2 className="text-sm font-semibold uppercase tracking-[0.14em] text-orange-950/70">
-              Como funciona
-            </h2>
-            <ol className="mt-4 space-y-4">
-              <li className="flex gap-3">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-orange-100 text-orange-700 dark:bg-orange-500/15 dark:text-amber-300">
-                  <Users className="size-4" aria-hidden="true" />
-                </span>
-                <p className="text-sm leading-relaxed text-neutral-700">
-                  Confirme presença e informe quantas pessoas vêm com você.
-                </p>
-              </li>
-              <li className="flex gap-3">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
-                  <ListChecks className="size-4" aria-hidden="true" />
-                </span>
-                <p className="text-sm leading-relaxed text-neutral-700">
-                  Escolha a travessa ou porção que pode levar. Cada item pode
-                  ter vários voluntários.
-                </p>
-              </li>
-              <li className="flex gap-3">
-                <span className="flex size-8 shrink-0 items-center justify-center rounded-full bg-amber-100 text-amber-700 dark:bg-amber-500/15 dark:text-amber-300">
-                  <HeartHandshake className="size-4" aria-hidden="true" />
-                </span>
-                <p className="text-sm leading-relaxed text-neutral-700">
-                  A cota de cada família é recalculada automaticamente. Todo
-                  mundo leva uma travessa, ninguém leva tudo. Gostosuras, frutas
-                  e petiscos entram na mesa compartilhada.
-                </p>
-              </li>
-            </ol>
-          </section>
         </aside>
       </div>
 
-      <PixContributionCard />
-
-      <DashboardItems items={data.items} totalPessoas={data.stats.totalPessoas} />
+      <DashboardItems
+        items={data.items}
+        totalPessoas={data.stats.totalPessoas}
+      />
 
       <SharedTable specialDishes={data.specialDishes} />
+
+      <PixContributionCard />
     </div>
   );
 }
@@ -78,16 +50,15 @@ async function Dashboard() {
 function DashboardSkeleton() {
   return (
     <div className="animate-pulse space-y-6" aria-hidden="true">
-      <div className="h-72 rounded-3xl bg-orange-100/70 dark:bg-orange-900" />
+      <div className="h-72 rounded-3xl bg-orange-100/70" />
       <div className="grid gap-6 lg:grid-cols-5">
-        <div className="h-[34rem] rounded-3xl bg-orange-100/70 lg:col-span-3 dark:bg-orange-900" />
+        <div className="h-[28rem] rounded-3xl bg-orange-100/70 lg:col-span-3" />
         <div className="space-y-6 lg:col-span-2">
-          <div className="h-60 rounded-3xl bg-orange-100/70 dark:bg-orange-900" />
-          <div className="h-64 rounded-3xl bg-orange-100/70 dark:bg-orange-900" />
+          <div className="h-64 rounded-3xl bg-orange-100/70" />
         </div>
       </div>
-      <div className="h-72 rounded-3xl bg-orange-100/70 dark:bg-orange-900" />
-      <div className="h-56 rounded-3xl bg-orange-100/70 dark:bg-orange-900" />
+      <div className="h-72 rounded-3xl bg-orange-100/70" />
+      <div className="h-48 rounded-3xl bg-orange-100/70" />
     </div>
   );
 }
@@ -98,10 +69,10 @@ function DashboardLoading() {
       <p
         role="status"
         aria-live="polite"
-        className="flex items-center justify-center gap-2 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-medium text-orange-700 dark:border-orange-500/30 dark:bg-orange-500/10 dark:text-amber-300"
+        className="flex items-center justify-center gap-2 rounded-2xl border border-orange-200 bg-orange-50 px-4 py-3 text-sm font-semibold text-orange-800"
       >
         <Loader2 className="size-4 animate-spin" aria-hidden="true" />
-        Carregando dados do evento...
+        Carregando dados do encontro...
       </p>
       <DashboardSkeleton />
     </div>
@@ -110,12 +81,12 @@ function DashboardLoading() {
 
 export default function Home() {
   return (
-    <main className="mx-auto w-full max-w-6xl px-4 py-6 sm:px-6 sm:py-10 lg:px-8">
+    <main className="mx-auto w-full max-w-6xl px-4 py-5 sm:px-6 sm:py-8 lg:px-8">
       <Suspense fallback={<DashboardLoading />}>
         <Dashboard />
       </Suspense>
 
-      <footer className="mt-10 text-center text-xs text-neutral-500 dark:text-neutral-400">
+      <footer className="mt-12 border-t border-orange-200/60 pt-6 text-center text-xs text-stone-600">
         Feito com carinho para a família Tavariando. Qualquer dúvida, fale com
         a organização.
       </footer>

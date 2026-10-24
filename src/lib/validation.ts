@@ -91,7 +91,30 @@ export const participantInputSchema = z
     }
   });
 
+export const contributionInputSchema = z
+  .object({
+    participantId: idSchema,
+    participantToken: sessionTokenSchema,
+    specialDishDescription: additionalDishSchema,
+    specialDishReplacesItemId: idSchema.nullable(),
+    selectedFoodItemIds: z
+      .array(idSchema)
+      .max(20, "Selecione no máximo 20 itens.")
+      .transform((ids) => [...new Set(ids)]),
+  })
+  .superRefine((value, context) => {
+    if (value.specialDishReplacesItemId && !value.specialDishDescription) {
+      context.addIssue({
+        code: "custom",
+        path: ["specialDishDescription"],
+        message:
+          "Descreva o prato adicional, doce, fruta ou petisco que você vai levar para indicar qual item ele substitui.",
+      });
+    }
+  });
+
 export type ParticipantInput = z.infer<typeof participantInputSchema>;
+export type ContributionInput = z.infer<typeof contributionInputSchema>;
 
 export function firstValidationMessage(error: z.ZodError): string {
   return (

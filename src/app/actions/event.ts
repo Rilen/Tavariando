@@ -12,6 +12,7 @@ import {
   verifySessionToken,
 } from "@/lib/session-token";
 import {
+  contributionInputSchema,
   firstValidationMessage,
   participantIdSchema,
   participantInputSchema,
@@ -111,6 +112,7 @@ export type ActionState = {
   participantId?: string;
   participantName?: string;
   participantToken?: string;
+  stepCompleted?: "presence" | "contribution" | "full";
 };
 
 export async function registerOrUpdateParticipant(
@@ -132,36 +134,78 @@ export async function registerOrUpdateParticipant(
     return { status: "success", message: "Confirmação recebida." };
   }
 
-  const parsed = participantInputSchema.safeParse({
-    name: getFormString(formData, "name"),
-    phone: getFormString(formData, "phone"),
-    dependentsCount: getFormString(formData, "dependentsCount") || "0",
-    bringsOwnDrink:
-      formData.get("bringsOwnDrink") === "on" ||
-      formData.get("bringsOwnDrink") === "true",
-    participantId: getFormString(formData, "participantId").trim() || null,
-    participantToken: getFormString(formData, "participantToken").trim() || null,
-    specialDishDescription: getFormString(formData, "specialDishDescription"),
-    specialDishReplacesItemId:
-      getFormString(formData, "specialDishReplacesItemId").trim() || null,
-    selectedFoodItemIds: getFormStringArray(formData, "selectedFoodItemIds"),
-  });
+  const rawFormScope = getFormString(formData, "formScope").trim();
+  const formScope: "presence" | "contribution" | "full" =
+    rawFormScope === "presence" || rawFormScope === "contribution"
+      ? rawFormScope
+      : "full";
+  const clearPhone = getFormString(formData, "clearPhone").trim() === "true";
 
-  if (!parsed.success) {
-    return { status: "error", message: firstValidationMessage(parsed.error) };
+  let name = "";
+  let phone: string | null = null;
+  let dependentsCount = 0;
+  let bringsOwnDrink = false;
+  let participantId: string | null = null;
+  let participantToken: string | null = null;
+  let specialDishDescription = "";
+  let specialDishReplacesItemId: string | null = null;
+  let selectedFoodItemIds: string[] = [];
+
+  if (formScope === "contribution") {
+    const parsedContribution = contributionInputSchema.safeParse({
+      participantId: getFormString(formData, "participantId").trim() || null,
+      participantToken:
+        getFormString(formData, "participantToken").trim() || null,
+      specialDishDescription: getFormString(formData, "specialDishDescription"),
+      specialDishReplacesItemId:
+        getFormString(formData, "specialDishReplacesItemId").trim() || null,
+      selectedFoodItemIds: getFormStringArray(formData, "selectedFoodItemIds"),
+    });
+
+    if (!parsedContribution.success) {
+      return {
+        status: "error",
+        message: firstValidationMessage(parsedContribution.error),
+      };
+    }
+
+    participantId = parsedContribution.data.participantId;
+    participantToken = parsedContribution.data.participantToken;
+    specialDishDescription = parsedContribution.data.specialDishDescription;
+    specialDishReplacesItemId =
+      parsedContribution.data.specialDishReplacesItemId;
+    selectedFoodItemIds = parsedContribution.data.selectedFoodItemIds;
+  } else {
+    const parsed = participantInputSchema.safeParse({
+      name: getFormString(formData, "name"),
+      phone: getFormString(formData, "phone"),
+      dependentsCount: getFormString(formData, "dependentsCount") || "0",
+      bringsOwnDrink:
+        formData.get("bringsOwnDrink") === "on" ||
+        formData.get("bringsOwnDrink") === "true",
+      participantId: getFormString(formData, "participantId").trim() || null,
+      participantToken:
+        getFormString(formData, "participantToken").trim() || null,
+      specialDishDescription: getFormString(formData, "specialDishDescription"),
+      specialDishReplacesItemId:
+        getFormString(formData, "specialDishReplacesItemId").trim() || null,
+      selectedFoodItemIds: getFormStringArray(formData, "selectedFoodItemIds"),
+    });
+
+    if (!parsed.success) {
+      return { status: "error", message: firstValidationMessage(parsed.error) };
+    }
+
+    name = parsed.data.name;
+    phone = parsed.data.phone;
+    dependentsCount = parsed.data.dependentsCount;
+    bringsOwnDrink = parsed.data.bringsOwnDrink;
+    participantId = parsed.data.participantId;
+    participantToken = parsed.data.participantToken;
+    specialDishDescription = parsed.data.specialDishDescription;
+    specialDishReplacesItemId = parsed.data.specialDishReplacesItemId;
+    selectedFoodItemIds = parsed.data.selectedFoodItemIds;
   }
-
-  const {
-    name,
-    phone,
-    dependentsCount,
-    bringsOwnDrink,
-    participantId,
-    participantToken,
-    specialDishDescription,
-    specialDishReplacesItemId,
-    selectedFoodItemIds,
-  } = parsed.data;
 
   const effectiveSelectedFoodItemIds = specialDishReplacesItemId
     ? selectedFoodItemIds.filter((id) => id !== specialDishReplacesItemId)
@@ -202,12 +246,17 @@ export async function registerOrUpdateParticipant(
 
     const result = await prisma.$transaction(async (tx) => {
       let savedParticipant: { id: string; name: string };
+      const isEditingExisting = Boolean(participantId);
 
       if (participantId) {
         const existingParticipant = await tx.participant.findUnique({
           where: { id: participantId },
           select: {
             id: true,
+            name: true,
+            phone: true,
+            dependentsCount: true,
+            bringsOwnDrink: true,
             session: { select: { tokenHash: true } },
           },
         });
@@ -224,16 +273,39 @@ export async function registerOrUpdateParticipant(
           throw new UnauthorizedSessionError();
         }
 
-        savedParticipant = await tx.participant.update({
-          where: { id: existingParticipant.id },
-          data: {
-            name,
-            phone,
-            dependentsCount,
-            bringsOwnDrink,
-            confirmed: true,
-          },
-        });
+        if (formScope === "contribution") {
+          const drinkFieldProvided = formData.has("bringsOwnDrink");
+          const updatedBringsOwnDrink = drinkFieldProvided
+            ? formData.get("bringsOwnDrink") === "on" ||
+              formData.get("bringsOwnDrink") === "true"
+            : existingParticipant.bringsOwnDrink;
+
+          savedParticipant = await tx.participant.update({
+            where: { id: existingParticipant.id },
+            data: {
+              bringsOwnDrink: updatedBringsOwnDrink,
+              confirmed: true,
+            },
+          });
+        } else {
+          const effectivePhone =
+            phone !== null
+              ? phone
+              : clearPhone
+                ? null
+                : existingParticipant.phone;
+
+          savedParticipant = await tx.participant.update({
+            where: { id: existingParticipant.id },
+            data: {
+              name,
+              phone: effectivePhone,
+              dependentsCount,
+              bringsOwnDrink,
+              confirmed: true,
+            },
+          });
+        }
       } else {
         savedParticipant = await tx.participant.create({
           data: {
@@ -246,88 +318,96 @@ export async function registerOrUpdateParticipant(
         });
       }
 
-      const validItems = effectiveSelectedFoodItemIds.length
-        ? await tx.foodItem.findMany({
-            where: { id: { in: effectiveSelectedFoodItemIds } },
-            select: {
-              id: true,
-              name: true,
-              category: true,
-              unitMeasure: true,
+      const shouldUpdateContributions =
+        formScope !== "presence" ||
+        !isEditingExisting ||
+        effectiveSelectedFoodItemIds.length > 0 ||
+        Boolean(specialDishDescription);
+
+      if (shouldUpdateContributions) {
+        const validItems = effectiveSelectedFoodItemIds.length
+          ? await tx.foodItem.findMany({
+              where: { id: { in: effectiveSelectedFoodItemIds } },
+              select: {
+                id: true,
+                name: true,
+                category: true,
+                unitMeasure: true,
+              },
+            })
+          : [];
+
+        if (validItems.length > 0) {
+          const confirmedParticipants = await tx.participant.findMany({
+            where: { confirmed: true },
+            select: { dependentsCount: true },
+          });
+          const totalPessoas = confirmedParticipants.reduce(
+            (total, current) => total + 1 + current.dependentsCount,
+            0,
+          );
+
+          const otherAssignments = await tx.itemAssignment.findMany({
+            where: {
+              foodItemId: { in: validItems.map((item) => item.id) },
+              participantId: { not: savedParticipant.id },
+              participant: { confirmed: true },
             },
-          })
-        : [];
+            select: { foodItemId: true },
+          });
 
-      if (validItems.length > 0) {
-        const confirmedParticipants = await tx.participant.findMany({
-          where: { confirmed: true },
-          select: { dependentsCount: true },
-        });
-        const totalPessoas = confirmedParticipants.reduce(
-          (total, current) => total + 1 + current.dependentsCount,
-          0,
-        );
+          const assignmentCounts = new Map<string, number>();
+          for (const assignment of otherAssignments) {
+            assignmentCounts.set(
+              assignment.foodItemId,
+              (assignmentCounts.get(assignment.foodItemId) ?? 0) + 1,
+            );
+          }
 
-        const otherAssignments = await tx.itemAssignment.findMany({
-          where: {
-            foodItemId: { in: validItems.map((item) => item.id) },
-            participantId: { not: savedParticipant.id },
-            participant: { confirmed: true },
-          },
-          select: { foodItemId: true },
-        });
+          for (const item of validItems) {
+            const profile = getServingProfile(item);
+            const capacity = Math.max(
+              1,
+              Math.ceil(totalPessoas / profile.servesPeople),
+            );
 
-        const assignmentCounts = new Map<string, number>();
-        for (const assignment of otherAssignments) {
-          assignmentCounts.set(
-            assignment.foodItemId,
-            (assignmentCounts.get(assignment.foodItemId) ?? 0) + 1,
-          );
-        }
-
-        for (const item of validItems) {
-          const profile = getServingProfile(item);
-          const capacity = Math.max(
-            1,
-            Math.ceil(totalPessoas / profile.servesPeople),
-          );
-
-          if ((assignmentCounts.get(item.id) ?? 0) + 1 > capacity) {
-            throw new ItemCapacityError(item.name);
+            if ((assignmentCounts.get(item.id) ?? 0) + 1 > capacity) {
+              throw new ItemCapacityError(item.name);
+            }
           }
         }
-      }
 
-      await tx.itemAssignment.deleteMany({
-        where: { participantId: savedParticipant.id },
-      });
-
-      if (validItems.length > 0) {
-        await tx.itemAssignment.createMany({
-          data: validItems.map((item) => ({
-            participantId: savedParticipant.id,
-            foodItemId: item.id,
-          })),
-        });
-      }
-
-      if (specialDishDescription) {
-        await tx.specialDish.upsert({
-          where: { participantId: savedParticipant.id },
-          create: {
-            participantId: savedParticipant.id,
-            description: specialDishDescription,
-            replacesFoodItemId: specialDishReplacesItemId,
-          },
-          update: {
-            description: specialDishDescription,
-            replacesFoodItemId: specialDishReplacesItemId,
-          },
-        });
-      } else {
-        await tx.specialDish.deleteMany({
+        await tx.itemAssignment.deleteMany({
           where: { participantId: savedParticipant.id },
         });
+
+        if (validItems.length > 0) {
+          await tx.itemAssignment.createMany({
+            data: validItems.map((item) => ({
+              participantId: savedParticipant.id,
+              foodItemId: item.id,
+            })),
+          });
+        }
+
+        if (specialDishDescription) {
+          await tx.specialDish.upsert({
+            where: { participantId: savedParticipant.id },
+            create: {
+              participantId: savedParticipant.id,
+              description: specialDishDescription,
+              replacesFoodItemId: specialDishReplacesItemId,
+            },
+            update: {
+              description: specialDishDescription,
+              replacesFoodItemId: specialDishReplacesItemId,
+            },
+          });
+        } else {
+          await tx.specialDish.deleteMany({
+            where: { participantId: savedParticipant.id },
+          });
+        }
       }
 
       const sessionToken = generateSessionToken();
@@ -352,12 +432,26 @@ export async function registerOrUpdateParticipant(
       console.error("Falha ao invalidar o cache do dashboard:", error);
     }
 
+    const hasChosenContribution =
+      effectiveSelectedFoodItemIds.length > 0 ||
+      Boolean(specialDishDescription);
+
+    const message =
+      formScope === "contribution"
+        ? hasChosenContribution
+          ? `Tudo certo, ${result.participant.name}! Sua contribuição no cardápio foi salva.`
+          : `Tudo certo, ${result.participant.name}! Sua presença continua confirmada e você pode escolher um prato quando quiser.`
+        : formScope === "presence" && !hasChosenContribution
+          ? `Presença confirmada, ${result.participant.name}! Agora, se quiser, você pode escolher o que levar.`
+          : `Tudo certo, ${result.participant.name}! Sua confirmação foi registrada.`;
+
     return {
       status: "success",
-      message: `Tudo certo, ${result.participant.name}! Sua confirmação foi registrada.`,
+      message,
       participantId: result.participant.id,
       participantName: result.participant.name,
       participantToken: result.sessionToken,
+      stepCompleted: formScope,
     };
   } catch (error) {
     if (error instanceof ItemCapacityError) {
