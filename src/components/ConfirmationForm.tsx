@@ -13,6 +13,7 @@ import {
   Plus,
   RefreshCw,
   Sparkles,
+  Trash2,
   UserCheck,
   UserPlus,
   Utensils,
@@ -27,9 +28,11 @@ import {
 import {
   CATEGORY_LABELS,
   CATEGORY_STYLES,
+  formatBeverageItemSummary,
+  formatLiters,
   pluralize,
 } from "@/lib/format";
-import { IceReminder } from "@/components/IceReminder";
+import { type BeverageCategory } from "@/lib/validation";
 import {
   clearStoredParticipantSession,
   PARTICIPANT_STEP_EVENT,
@@ -54,6 +57,24 @@ type ItemCategoryFilter =
 const initialState: ActionState = { status: "idle", message: "" };
 const QUICK_DEPENDENT_OPTIONS = [0, 1, 2, 3, 4, 5];
 
+type FormSharedBeverage = {
+  id: string;
+  category: BeverageCategory;
+  customDescription: string;
+  quantity: number;
+  unitVolumeMl: number;
+};
+
+const VOLUME_PRESETS = [
+  { value: 2000, label: "2 L (Garrafa)" },
+  { value: 1500, label: "1,5 L (Garrafa)" },
+  { value: 1000, label: "1 L (Garrafa / Caixa)" },
+  { value: 500, label: "500 mL (Garrafa)" },
+  { value: 350, label: "350 mL (Lata)" },
+  { value: 200, label: "200 mL (Copinho / Mini)" },
+  { value: -1, label: "Outro volume (digitar em mL)" },
+] as const;
+
 function getParticipantSignature(
   participant: DashboardParticipant | undefined,
 ): string {
@@ -66,6 +87,12 @@ function getParticipantSignature(
     participant.itemIds.join(","),
     participant.specialDish?.description ?? "",
     participant.specialDish?.replacesItemId ?? "",
+    (participant.sharedBeverages ?? [])
+      .map(
+        (b) =>
+          `${b.category}:${b.quantity}:${b.unitVolumeMl}:${b.customDescription ?? ""}`,
+      )
+      .join(";"),
   ].join("|");
 }
 
@@ -112,6 +139,10 @@ export function ConfirmationForm({
   const [phoneTouched, setPhoneTouched] = useState(false);
   const [dependentsCount, setDependentsCount] = useState(0);
   const [bringsOwnDrink, setBringsOwnDrink] = useState(false);
+  const [bringsSharedBeverages, setBringsSharedBeverages] = useState(false);
+  const [sharedBeverages, setSharedBeverages] = useState<FormSharedBeverage[]>(
+    [],
+  );
   const [selectedFoodItemIds, setSelectedFoodItemIds] = useState<string[]>([]);
   const [specialDishDescription, setSpecialDishDescription] = useState("");
   const [specialDishReplacesItemId, setSpecialDishReplacesItemId] =
@@ -136,6 +167,17 @@ export function ConfirmationForm({
       setSpecialDishDescription(existingSpecialDescription);
       setSpecialDishReplacesItemId(existingSpecialReplaces);
       setShowSpecialDishFields(Boolean(existingSpecialDescription));
+      const existingShared = activeParticipant.sharedBeverages ?? [];
+      setBringsSharedBeverages(existingShared.length > 0);
+      setSharedBeverages(
+        existingShared.map((b) => ({
+          id: b.id,
+          category: (b.category as BeverageCategory) || "REFRIGERANTE",
+          customDescription: b.customDescription ?? "",
+          quantity: b.quantity,
+          unitVolumeMl: b.unitVolumeMl,
+        })),
+      );
       if (session?.phone && !phoneTouched) {
         setPhone(session.phone);
       }
@@ -153,6 +195,8 @@ export function ConfirmationForm({
       setSpecialDishDescription("");
       setSpecialDishReplacesItemId("");
       setShowSpecialDishFields(false);
+      setBringsSharedBeverages(false);
+      setSharedBeverages([]);
       setIncludeItemsInStep1(false);
       setActiveStep("presence");
     }
@@ -271,7 +315,8 @@ export function ConfirmationForm({
 
   const hasCurrentContribution =
     selectedFoodItemIds.length > 0 ||
-    effectiveSpecialDishDescription.length > 0;
+    effectiveSpecialDishDescription.length > 0 ||
+    (bringsSharedBeverages && sharedBeverages.length > 0);
 
   const currentStep: ParticipantStep = isConfirmedParticipant
     ? activeStep
@@ -283,6 +328,302 @@ export function ConfirmationForm({
       : includeItemsInStep1 && !isConfirmedParticipant
         ? "full"
         : "presence";
+
+  function handleAddBeverage() {
+    setSharedBeverages((prev) => [
+      ...prev,
+      {
+        id: `bev-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`,
+        category: "REFRIGERANTE",
+        customDescription: "",
+        quantity: 2,
+        unitVolumeMl: 2000,
+      },
+    ]);
+  }
+
+  function handleUpdateBeverage(
+    id: string,
+    updates: Partial<FormSharedBeverage>,
+  ) {
+    setSharedBeverages((prev) =>
+      prev.map((bev) => (bev.id === id ? { ...bev, ...updates } : bev)),
+    );
+  }
+
+  function handleRemoveBeverage(id: string) {
+    setSharedBeverages((prev) => prev.filter((bev) => bev.id !== id));
+  }
+
+  function renderSharedBeveragesSection() {
+    const totalLiters = sharedBeverages.reduce(
+      (sum, b) => sum + (b.quantity * b.unitVolumeMl) / 1000,
+      0,
+    );
+
+    return (
+      <div className="space-y-3">
+        <div className="rounded-2xl border border-sky-200/80 bg-sky-50/50 p-4">
+          <p className="text-xs font-semibold text-sky-950 sm:text-sm">
+            💡 Quem preferir pode levar suas próprias bebidas e cooler para
+            consumo pessoal, sem necessidade de informar.
+          </p>
+          <p className="mt-1 text-xs leading-relaxed text-sky-800">
+            Lembrete: quem trouxer cooler individual leva também seu saco de gelo
+            para manter tudo geladinho o dia todo!
+          </p>
+        </div>
+
+        <div className="rounded-2xl border border-orange-200/80 bg-orange-50/40 p-4 transition">
+          <label className="flex cursor-pointer items-start gap-3 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-orange-700 has-[:focus-visible]:ring-offset-2">
+            <input
+              type="checkbox"
+              checked={bringsSharedBeverages}
+              onChange={(e) => {
+                const checked = e.target.checked;
+                setBringsSharedBeverages(checked);
+                if (checked && sharedBeverages.length === 0) {
+                  handleAddBeverage();
+                }
+              }}
+              className="sr-only"
+            />
+            <span
+              aria-hidden="true"
+              className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border transition ${
+                bringsSharedBeverages
+                  ? "border-orange-700 bg-orange-700 text-white"
+                  : "border-orange-300 bg-white text-transparent"
+              }`}
+            >
+              <Check className="size-3.5" />
+            </span>
+            <span className="flex-1">
+              <span className="flex items-center gap-2 text-sm font-bold text-orange-950">
+                <Wine className="size-4 text-orange-700" aria-hidden="true" />
+                Vou levar bebidas para compartilhar com a família
+              </span>
+              <span className="mt-0.5 block text-xs leading-relaxed text-stone-600">
+                Opcional. Adicione refrigerantes, sucos ou águas para somar à
+                mesa comum.
+              </span>
+            </span>
+          </label>
+
+          {bringsSharedBeverages && (
+            <div className="mt-4 space-y-3 border-t border-orange-200/60 pt-4">
+              <p className="text-xs font-bold uppercase tracking-wider text-orange-900">
+                Bebidas que você vai levar:
+              </p>
+
+              {sharedBeverages.length === 0 ? (
+                <div className="rounded-xl border border-dashed border-orange-300 bg-white p-3 text-center">
+                  <p className="text-xs text-stone-600">
+                    Nenhuma bebida adicionada. Clique abaixo para adicionar.
+                  </p>
+                </div>
+              ) : (
+                <div className="space-y-3">
+                  {sharedBeverages.map((bev, index) => {
+                    const isPreset = VOLUME_PRESETS.some(
+                      (p) => p.value === bev.unitVolumeMl,
+                    );
+                    const selectedPresetValue = isPreset
+                      ? bev.unitVolumeMl
+                      : -1;
+
+                    return (
+                      <div
+                        key={bev.id}
+                        className="rounded-2xl border border-orange-200 bg-white p-3.5 shadow-2xs space-y-3"
+                      >
+                        <div className="flex items-center justify-between gap-2">
+                          <span className="text-xs font-bold text-orange-950">
+                            Bebida #{index + 1}
+                          </span>
+                          <button
+                            type="button"
+                            onClick={() => handleRemoveBeverage(bev.id)}
+                            aria-label={`Remover bebida #${index + 1}`}
+                            className="inline-flex size-8 items-center justify-center rounded-lg text-stone-400 hover:bg-rose-50 hover:text-rose-700 transition"
+                          >
+                            <Trash2 className="size-4" aria-hidden="true" />
+                          </button>
+                        </div>
+
+                        <div className="grid grid-cols-1 gap-2.5 sm:grid-cols-2">
+                          <div>
+                            <label className="block text-xs font-bold text-stone-700 mb-1">
+                              Tipo de bebida
+                            </label>
+                            <select
+                              value={bev.category}
+                              onChange={(e) =>
+                                handleUpdateBeverage(bev.id, {
+                                  category: e.target.value as BeverageCategory,
+                                })
+                              }
+                              className="w-full rounded-xl border border-orange-200 bg-stone-50 px-3 py-2 text-xs font-semibold text-stone-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-700"
+                            >
+                              <option value="REFRIGERANTE">Refrigerante</option>
+                              <option value="SUCO">Suco</option>
+                              <option value="AGUA">Água</option>
+                              <option value="OUTRA">Outra bebida</option>
+                            </select>
+                          </div>
+
+                          <div>
+                            <label className="block text-xs font-bold text-stone-700 mb-1">
+                              Volume da unidade
+                            </label>
+                            <select
+                              value={selectedPresetValue}
+                              onChange={(e) => {
+                                const val = Number(e.target.value);
+                                if (val > 0) {
+                                  handleUpdateBeverage(bev.id, {
+                                    unitVolumeMl: val,
+                                  });
+                                } else {
+                                  handleUpdateBeverage(bev.id, {
+                                    unitVolumeMl: 250,
+                                  });
+                                }
+                              }}
+                              className="w-full rounded-xl border border-orange-200 bg-stone-50 px-3 py-2 text-xs font-semibold text-stone-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-700"
+                            >
+                              {VOLUME_PRESETS.map((preset) => (
+                                <option
+                                  key={preset.value}
+                                  value={preset.value}
+                                >
+                                  {preset.label}
+                                </option>
+                              ))}
+                            </select>
+                          </div>
+                        </div>
+
+                        {selectedPresetValue === -1 && (
+                          <div>
+                            <label className="block text-xs font-medium text-stone-600 mb-1">
+                              Volume personalizado em mL (ex.: 250, 300, 2500)
+                            </label>
+                            <input
+                              type="number"
+                              min={50}
+                              max={10000}
+                              step={50}
+                              value={bev.unitVolumeMl}
+                              onChange={(e) =>
+                                handleUpdateBeverage(bev.id, {
+                                  unitVolumeMl: Math.max(
+                                    50,
+                                    Number(e.target.value) || 50,
+                                  ),
+                                })
+                              }
+                              className="w-full rounded-xl border border-orange-200 bg-stone-50 px-3 py-1.5 text-xs text-stone-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-700"
+                            />
+                          </div>
+                        )}
+
+                        {bev.category === "OUTRA" && (
+                          <div>
+                            <label className="block text-xs font-medium text-stone-600 mb-1">
+                              Qual é a bebida?
+                            </label>
+                            <input
+                              type="text"
+                              maxLength={60}
+                              value={bev.customDescription}
+                              onChange={(e) =>
+                                handleUpdateBeverage(bev.id, {
+                                  customDescription: e.target.value,
+                                })
+                              }
+                              placeholder="Ex.: Chá mate gelado, Guaraná natural"
+                              className="w-full rounded-xl border border-orange-200 bg-stone-50 px-3 py-1.5 text-xs text-stone-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-700"
+                            />
+                          </div>
+                        )}
+
+                        <div className="flex flex-col gap-2 pt-1 border-t border-stone-100 sm:flex-row sm:items-center sm:justify-between">
+                          <div className="flex items-center gap-2">
+                            <span className="text-xs font-medium text-stone-600">
+                              Quantidade:
+                            </span>
+                            <div className="inline-flex items-center rounded-xl border border-orange-200 bg-stone-50">
+                              <button
+                                type="button"
+                                disabled={bev.quantity <= 1}
+                                onClick={() =>
+                                  handleUpdateBeverage(bev.id, {
+                                    quantity: Math.max(1, bev.quantity - 1),
+                                  })
+                                }
+                                aria-label="Diminuir quantidade"
+                                className="inline-flex size-8 items-center justify-center rounded-lg text-stone-700 hover:bg-orange-100 disabled:opacity-40"
+                              >
+                                <Minus className="size-3.5" />
+                              </button>
+                              <span className="w-8 text-center text-xs font-bold text-stone-900">
+                                {bev.quantity}
+                              </span>
+                              <button
+                                type="button"
+                                disabled={bev.quantity >= 100}
+                                onClick={() =>
+                                  handleUpdateBeverage(bev.id, {
+                                    quantity: Math.min(100, bev.quantity + 1),
+                                  })
+                                }
+                                aria-label="Aumentar quantidade"
+                                className="inline-flex size-8 items-center justify-center rounded-lg text-stone-700 hover:bg-orange-100 disabled:opacity-40"
+                              >
+                                <Plus className="size-3.5" />
+                              </button>
+                            </div>
+                          </div>
+
+                          <span className="text-xs font-bold text-sky-900">
+                            {formatBeverageItemSummary(
+                              bev.quantity,
+                              bev.unitVolumeMl,
+                              bev.category === "OUTRA"
+                                ? bev.customDescription
+                                : null,
+                            )}
+                          </span>
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              )}
+
+              <div className="flex flex-col gap-2 pt-2 sm:flex-row sm:items-center sm:justify-between">
+                <button
+                  type="button"
+                  onClick={handleAddBeverage}
+                  className="inline-flex items-center justify-center gap-1.5 rounded-xl border border-orange-300 bg-white px-3 py-1.5 text-xs font-bold text-orange-900 shadow-2xs hover:bg-orange-50 transition"
+                >
+                  <Plus className="size-3.5" />
+                  Adicionar outra bebida
+                </button>
+
+                {sharedBeverages.length > 0 && (
+                  <span className="text-xs font-bold text-sky-950 bg-sky-100/70 border border-sky-200/80 px-2.5 py-1 rounded-lg">
+                    Total a compartilhar: {formatLiters(totalLiters)}
+                  </span>
+                )}
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
 
   function renderItemSelectorSection() {
     return (
@@ -1020,41 +1361,20 @@ export function ConfirmationForm({
               </div>
             </fieldset>
 
-            <div className="space-y-2">
-              <label className="flex cursor-pointer items-start gap-3 rounded-2xl border border-orange-200/80 bg-orange-50/40 p-4 transition hover:border-orange-400 has-[:focus-visible]:ring-2 has-[:focus-visible]:ring-orange-700 has-[:focus-visible]:ring-offset-2">
-                <input
-                  type="checkbox"
-                  name="bringsOwnDrink"
-                  checked={bringsOwnDrink}
-                  onChange={(event) => setBringsOwnDrink(event.target.checked)}
-                  className="sr-only"
-                />
-                <span
-                  aria-hidden="true"
-                  className={`mt-0.5 flex size-5 shrink-0 items-center justify-center rounded-md border transition ${
-                    bringsOwnDrink
-                      ? "border-orange-700 bg-orange-700 text-white"
-                      : "border-orange-300 bg-white text-transparent"
-                  }`}
-                >
-                  <Check className="size-3.5" />
-                </span>
-                <span className="flex-1">
-                  <span className="flex items-center gap-2 text-sm font-bold text-orange-950">
-                    <Wine
-                      className="size-4 text-orange-700"
-                      aria-hidden="true"
-                    />
-                    Vou levar minha própria bebida (opcional)
-                  </span>
-                  <span className="mt-0.5 block text-xs leading-relaxed text-stone-600">
-                    Marque se for trazer seu cooler ou térmica individual.
-                  </span>
-                </span>
-              </label>
+            {renderSharedBeveragesSection()}
 
-              {bringsOwnDrink && <IceReminder />}
-            </div>
+            <input
+              type="hidden"
+              name="sharedBeverages"
+              value={
+                bringsSharedBeverages ? JSON.stringify(sharedBeverages) : "[]"
+              }
+            />
+            <input
+              type="hidden"
+              name="bringsOwnDrink"
+              value={bringsOwnDrink ? "true" : "false"}
+            />
 
             {!isConfirmedParticipant && (
               <div className="rounded-2xl border border-orange-200/70 bg-orange-50/30 p-4">
@@ -1143,11 +1463,24 @@ export function ConfirmationForm({
               name="dependentsCount"
               value={dependentsCount}
             />
-            {bringsOwnDrink && (
-              <input type="hidden" name="bringsOwnDrink" value="true" />
-            )}
+            <input
+              type="hidden"
+              name="sharedBeverages"
+              value={
+                bringsSharedBeverages ? JSON.stringify(sharedBeverages) : "[]"
+              }
+            />
+            <input
+              type="hidden"
+              name="bringsOwnDrink"
+              value={bringsOwnDrink ? "true" : "false"}
+            />
 
             {renderItemSelectorSection()}
+
+            <div className="border-t border-orange-200/70 pt-5">
+              {renderSharedBeveragesSection()}
+            </div>
 
             <div className="flex flex-col gap-3 border-t border-orange-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
               <div className="space-y-0.5">

@@ -106,3 +106,60 @@ export function normalizeWhatsappUrl(rawUrl?: string | null): string | null {
     return null;
   }
 }
+
+export const BEVERAGE_CATEGORY_LABELS: Record<string, string> = {
+  REFRIGERANTE: "Refrigerante",
+  SUCO: "Suco",
+  AGUA: "Água",
+  OUTRA: "Outra bebida",
+};
+
+export const BEVERAGE_CATEGORY_GROUP_LABELS: Record<string, string> = {
+  REFRIGERANTE: "Refrigerantes",
+  SUCO: "Sucos",
+  AGUA: "Águas",
+  OUTRA: "Outras bebidas",
+};
+
+export function formatUnitVolume(ml: number): string {
+  if (ml < 1000) {
+    return `${ml} mL`;
+  }
+  const liters = ml / 1000;
+  return `${numberFormatter.format(liters)} L`;
+}
+
+export function formatLiters(liters: number): string {
+  return `${numberFormatter.format(liters)} L`;
+}
+
+export function formatContainerLabel(
+  quantity: number,
+  unitVolumeMl: number,
+): string {
+  const vol = formatUnitVolume(unitVolumeMl);
+  if (unitVolumeMl === 350) {
+    return pluralize(quantity, "lata de 350 mL", "latas de 350 mL");
+  }
+  if (unitVolumeMl >= 1000) {
+    return pluralize(quantity, `garrafa de ${vol}`, `garrafas de ${vol}`);
+  }
+  if (unitVolumeMl === 500) {
+    return pluralize(quantity, "garrafa de 500 mL", "garrafas de 500 mL");
+  }
+  return pluralize(quantity, `unidade de ${vol}`, `unidades de ${vol}`);
+}
+
+export function formatBeverageItemSummary(
+  quantity: number,
+  unitVolumeMl: number,
+  customDescription?: string | null,
+): string {
+  const container = formatContainerLabel(quantity, unitVolumeMl);
+  const totalLiters = (quantity * unitVolumeMl) / 1000;
+  const litersStr = formatLiters(totalLiters);
+  const prefix = customDescription?.trim()
+    ? `${customDescription.trim()}: `
+    : "";
+  return `${prefix}${container} — ${litersStr}`;
+}

@@ -20,7 +20,12 @@ import {
   type DashboardItem,
   type DashboardParticipant,
 } from "@/app/actions/event";
-import { pluralize } from "@/lib/format";
+import {
+  BEVERAGE_CATEGORY_LABELS,
+  formatBeverageItemSummary,
+  formatLiters,
+  pluralize,
+} from "@/lib/format";
 import {
   clearStoredParticipantSession,
   requestParticipantStep,
@@ -53,8 +58,12 @@ export function MyQuotaCard({
     ? items.filter((item) => participant.itemIds.includes(item.id))
     : [];
 
+  const myBeverages = participant?.sharedBeverages ?? [];
+
   const hasContribution =
-    myItems.length > 0 || Boolean(participant?.specialDish);
+    myItems.length > 0 ||
+    Boolean(participant?.specialDish) ||
+    myBeverages.length > 0;
 
   async function handleConfirmCancel() {
     if (!participant || !session?.participantToken || isCancelling) return;
@@ -209,6 +218,19 @@ export function MyQuotaCard({
               "pessoas confirmadas",
             )}
           </span>
+          {myBeverages.length > 0 && (
+            <span className="inline-flex items-center gap-1.5 rounded-full bg-black/20 px-3 py-1 font-semibold text-sky-100">
+              <Wine className="size-3.5" aria-hidden="true" />
+              Leva bebidas para compartilhar (
+              {formatLiters(
+                myBeverages.reduce(
+                  (sum, b) => sum + (b.quantity * b.unitVolumeMl) / 1000,
+                  0,
+                ),
+              )}
+              )
+            </span>
+          )}
           {participant.bringsOwnDrink && (
             <>
               <span className="inline-flex items-center gap-1.5 rounded-full bg-black/20 px-3 py-1 font-semibold text-amber-100">
@@ -247,6 +269,36 @@ export function MyQuotaCard({
                   </li>
                 ))}
               </ul>
+            )}
+
+            {myBeverages.length > 0 && (
+              <div className="space-y-2">
+                <p className="text-[11px] font-bold uppercase tracking-wider text-sky-200">
+                  Bebidas para compartilhar
+                </p>
+                <ul className="space-y-2">
+                  {myBeverages.map((bev) => (
+                    <li
+                      key={bev.id}
+                      className="rounded-2xl border border-white/15 bg-black/15 p-3.5 backdrop-blur-sm"
+                    >
+                      <p className="text-sm font-bold text-white">
+                        {BEVERAGE_CATEGORY_LABELS[bev.category] ?? bev.category}
+                        {bev.customDescription
+                          ? ` (${bev.customDescription})`
+                          : ""}
+                      </p>
+                      <p className="mt-0.5 text-xs text-orange-50">
+                        Você leva{" "}
+                        {formatBeverageItemSummary(
+                          bev.quantity,
+                          bev.unitVolumeMl,
+                        )}
+                      </p>
+                    </li>
+                  ))}
+                </ul>
+              </div>
             )}
 
             {participant.specialDish && (

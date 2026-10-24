@@ -6,7 +6,12 @@ import {
   cancelParticipation,
   registerOrUpdateParticipant,
 } from "@/app/actions/event";
+import { getDashboardData } from "@/lib/dashboard-data";
 import {
+  formatBeverageItemSummary,
+  formatContainerLabel,
+  formatLiters,
+  formatUnitVolume,
   normalizePixKey,
   normalizeWhatsappUrl,
 } from "@/lib/format";
@@ -45,6 +50,7 @@ describe("Tavariando — Fluxo de Confirmação, Contribuição e Segurança", (
   before(async () => {
     await prisma.itemAssignment.deleteMany();
     await prisma.specialDish.deleteMany();
+    await prisma.sharedBeverage.deleteMany();
     await prisma.participantSession.deleteMany();
     await prisma.participant.deleteMany();
     await prisma.foodItem.deleteMany();
@@ -92,6 +98,7 @@ describe("Tavariando — Fluxo de Confirmação, Contribuição e Segurança", (
     resetRateLimits();
     await prisma.itemAssignment.deleteMany();
     await prisma.specialDish.deleteMany();
+    await prisma.sharedBeverage.deleteMany();
     await prisma.participantSession.deleteMany();
     await prisma.participant.deleteMany();
   });
@@ -701,5 +708,493 @@ describe("Tavariando — Fluxo de Confirmação, Contribuição e Segurança", (
       where: { id: legitimateId },
     });
     assert.equal(updated?.dependentsCount, 3);
+  });
+
+  it("F06: Registro de contribuição voluntária de bebida compartilhada com cálculo correto de volume", async () => {
+    resetRateLimits();
+    const res = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "full",
+        name: "Tio das Bebidas",
+        dependentsCount: "1",
+        sharedBeverages: JSON.stringify([
+          {
+            category: "REFRIGERANTE",
+            quantity: 6,
+            unitVolumeMl: 2000,
+          },
+        ]),
+      }),
+    );
+
+    assert.equal(res.status, "success");
+    assert.ok(res.participantId);
+
+    const saved = await prisma.sharedBeverage.findMany({
+      where: { participantId: res.participantId },
+    });
+    assert.equal(saved.length, 1);
+    assert.equal(saved[0].category, "REFRIGERANTE");
+    assert.equal(saved[0].quantity, 6);
+    assert.equal(saved[0].unitVolumeMl, 2000);
+    const totalMl = saved[0].quantity * saved[0].unitVolumeMl;
+    assert.equal(totalMl, 12000); // 12 L
+  });
+
+  it("F06: Registro de múltiplas bebidas de diferentes tipos e volumes em embalagens distintas", async () => {
+    resetRateLimits();
+    const res = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "full",
+        name: "Prima Organizada",
+        dependentsCount: "0",
+        sharedBeverages: JSON.stringify([
+          {
+            category: "REFRIGERANTE",
+            quantity: 4,
+            unitVolumeMl: 2000,
+          },
+          {
+            category: "SUCO",
+            quantity: 3,
+            unitVolumeMl: 1000,
+          },
+          {
+            category: "AGUA",
+            quantity: 12,
+            unitVolumeMl: 500,
+          },
+        ]),
+      }),
+    );
+
+    assert.equal(res.status, "success");
+    const saved = await prisma.sharedBeverage.findMany({
+      where: { participantId: res.participantId },
+      orderBy: { unitVolumeMl: "desc" },
+    });
+    assert.equal(saved.length, 3);
+
+    const refri = saved.find((b) => b.category === "REFRIGERANTE");
+    const suco = saved.find((b) => b.category === "SUCO");
+    const agua = saved.find((b) => b.category === "AGUA");
+
+    assert.equal(refri?.quantity, 4);
+    assert.equal(refri?.unitVolumeMl, 2000); // 8 L
+    assert.equal(suco?.quantity, 3);
+    assert.equal(suco?.unitVolumeMl, 1000); // 3 L
+    assert.equal(agua?.quantity, 12);
+    assert.equal(agua?.unitVolumeMl, 500); // 6 L
+  });
+
+  it("F06: Categoria 'Outra bebida' exige descrição personalizada não vazia", async () => {
+    resetRateLimits();
+    // Empty description fails
+    const failRes = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "full",
+        name: "Primo Criativo",
+        dependentsCount: "0",
+        sharedBeverages: JSON.stringify([
+          {
+            category: "OUTRA",
+            customDescription: "   ",
+            quantity: 2,
+            unitVolumeMl: 1000,
+          },
+        ]),
+      }),
+    );
+    assert.equal(failRes.status, "error");
+    assert.match(failRes.message, /Descreva a bebida quando selecionar 'Outra bebida'/);
+
+    // Valid description succeeds
+    const successRes = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "full",
+        name: "Primo Criativo",
+        dependentsCount: "0",
+        sharedBeverages: JSON.stringify([
+          {
+            category: "OUTRA",
+            customDescription: "Chá mate gelado com limão",
+            quantity: 2,
+            unitVolumeMl: 1500,
+          },
+        ]),
+      }),
+    );
+    assert.equal(successRes.status, "success");
+    const saved = await prisma.sharedBeverage.findFirst({
+      where: { participantId: successRes.participantId },
+    });
+    assert.equal(saved?.category, "OUTRA");
+    assert.equal(saved?.customDescription, "Chá mate gelado com limão");
+    assert.equal(saved?.quantity, 2);
+    assert.equal(saved?.unitVolumeMl, 1500);
+  });
+
+  it("F06: Edição de bebidas compartilhadas por participante autenticado com atualização correta no banco", async () => {
+    resetRateLimits();
+    // Step 1: Create participant with initial drink
+    const initial = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "full",
+        name: "Tia Maria",
+        dependentsCount: "2",
+        sharedBeverages: JSON.stringify([
+          {
+            category: "REFRIGERANTE",
+            quantity: 2,
+            unitVolumeMl: 2000,
+          },
+        ]),
+      }),
+    );
+    assert.equal(initial.status, "success");
+    const pId = initial.participantId!;
+    const pToken = initial.participantToken!;
+
+    // Step 2: Update shared beverages via contribution step
+    const updated = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "contribution",
+        participantId: pId,
+        participantToken: pToken,
+        sharedBeverages: JSON.stringify([
+          {
+            category: "REFRIGERANTE",
+            quantity: 4,
+            unitVolumeMl: 2000,
+          },
+          {
+            category: "SUCO",
+            quantity: 2,
+            unitVolumeMl: 1000,
+          },
+        ]),
+      }),
+    );
+    assert.equal(updated.status, "success");
+
+    const saved = await prisma.sharedBeverage.findMany({
+      where: { participantId: pId },
+      orderBy: { category: "asc" },
+    });
+    assert.equal(saved.length, 2);
+    assert.equal(saved[0].category, "REFRIGERANTE");
+    assert.equal(saved[0].quantity, 4);
+    assert.equal(saved[1].category, "SUCO");
+    assert.equal(saved[1].quantity, 2);
+  });
+
+  it("F06: Exclusão/desmarcação de bebidas compartilhadas remove os registros do banco", async () => {
+    resetRateLimits();
+    // Create participant with shared beverages
+    const initial = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "full",
+        name: "Tio João",
+        dependentsCount: "0",
+        sharedBeverages: JSON.stringify([
+          {
+            category: "AGUA",
+            quantity: 6,
+            unitVolumeMl: 1500,
+          },
+        ]),
+      }),
+    );
+    assert.equal(initial.status, "success");
+    const pId = initial.participantId!;
+    const pToken = initial.participantToken!;
+
+    const countBefore = await prisma.sharedBeverage.count({
+      where: { participantId: pId },
+    });
+    assert.equal(countBefore, 1);
+
+    // Update with empty list []
+    const clearRes = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "full",
+        participantId: pId,
+        participantToken: pToken,
+        name: "Tio João",
+        dependentsCount: "0",
+        sharedBeverages: "[]",
+      }),
+    );
+    assert.equal(clearRes.status, "success");
+
+    const countAfter = await prisma.sharedBeverage.count({
+      where: { participantId: pId },
+    });
+    assert.equal(countAfter, 0);
+  });
+
+  it("F06: Cancelamento de participação remove completamente as bebidas compartilhadas do participante", async () => {
+    resetRateLimits();
+    const initial = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "full",
+        name: "Primo Desistente",
+        dependentsCount: "1",
+        sharedBeverages: JSON.stringify([
+          {
+            category: "REFRIGERANTE",
+            quantity: 4,
+            unitVolumeMl: 2000,
+          },
+        ]),
+      }),
+    );
+    assert.equal(initial.status, "success");
+    const pId = initial.participantId!;
+    const pToken = initial.participantToken!;
+
+    const cancelRes = await cancelParticipation(pId, pToken);
+    assert.equal(cancelRes.status, "success");
+
+    const remainingDrinks = await prisma.sharedBeverage.count({
+      where: { participantId: pId },
+    });
+    assert.equal(remainingDrinks, 0);
+
+    const participant = await prisma.participant.findUnique({
+      where: { id: pId },
+    });
+    assert.equal(participant?.confirmed, false);
+  });
+
+  it("F06: Tentativa de alteração de bebidas por sessão forjada é rejeitada", async () => {
+    resetRateLimits();
+    const legitimate = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "full",
+        name: "Vítima de Ataque",
+        dependentsCount: "0",
+        sharedBeverages: JSON.stringify([
+          {
+            category: "SUCO",
+            quantity: 2,
+            unitVolumeMl: 1000,
+          },
+        ]),
+      }),
+    );
+    assert.equal(legitimate.status, "success");
+    const pId = legitimate.participantId!;
+
+    const attackRes = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "contribution",
+        participantId: pId,
+        participantToken: "forged-invalid-session-token-1234567890abcdef",
+        sharedBeverages: "[]",
+      }),
+    );
+    assert.equal(attackRes.status, "error");
+    assert.match(attackRes.message, /Sua sessão expirou ou não pôde ser validada/);
+
+    // Drinks remain intact
+    const drinks = await prisma.sharedBeverage.findMany({
+      where: { participantId: pId },
+    });
+    assert.equal(drinks.length, 1);
+    assert.equal(drinks[0].category, "SUCO");
+  });
+
+  it("F06: Resumo agregado no dashboard agrupa por categoria e volume sem somar garrafas e latas como equivalentes", async () => {
+    resetRateLimits();
+    // Participant 1: 6 bottles of 2 L of Refrigerante (= 12 L)
+    await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "full",
+        name: "Participante 1",
+        dependentsCount: "0",
+        sharedBeverages: JSON.stringify([
+          {
+            category: "REFRIGERANTE",
+            quantity: 6,
+            unitVolumeMl: 2000,
+          },
+        ]),
+      }),
+    );
+
+    // Participant 2: 4 cans of 350 mL of Refrigerante (= 1.4 L) + 3 bottles of 1 L of Suco (= 3 L)
+    await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "full",
+        name: "Participante 2",
+        dependentsCount: "1",
+        sharedBeverages: JSON.stringify([
+          {
+            category: "REFRIGERANTE",
+            quantity: 4,
+            unitVolumeMl: 350,
+          },
+          {
+            category: "SUCO",
+            quantity: 3,
+            unitVolumeMl: 1000,
+          },
+        ]),
+      }),
+    );
+
+    const dashboard = await getDashboardData();
+    const summary = dashboard.sharedBeveragesSummary;
+
+    // Total liters: 12 + 1.4 + 3 = 16.4 L
+    assert.equal(summary.totalLiters, 16.4);
+    assert.equal(summary.totalUnits, 13); // 6 + 4 + 3
+    assert.equal(summary.groups.length, 2); // Refrigerante and Suco
+
+    const refriGroup = summary.groups.find((g) => g.category === "REFRIGERANTE");
+    assert.ok(refriGroup);
+    assert.equal(refriGroup.totalLiters, 13.4);
+    // Distinct breakdowns by packaging size:
+    assert.equal(refriGroup.items.length, 2);
+
+    const bottles2L = refriGroup.items.find((i) => i.unitVolumeMl === 2000);
+    assert.ok(bottles2L);
+    assert.equal(bottles2L.totalQuantity, 6);
+    assert.equal(bottles2L.totalLiters, 12);
+    assert.equal(bottles2L.containerLabel, "6 garrafas de 2 L");
+
+    const cans350mL = refriGroup.items.find((i) => i.unitVolumeMl === 350);
+    assert.ok(cans350mL);
+    assert.equal(cans350mL.totalQuantity, 4);
+    assert.equal(cans350mL.totalLiters, 1.4);
+    assert.equal(cans350mL.containerLabel, "4 latas de 350 mL");
+
+    const sucoGroup = summary.groups.find((g) => g.category === "SUCO");
+    assert.ok(sucoGroup);
+    assert.equal(sucoGroup.totalLiters, 3);
+    assert.equal(sucoGroup.items.length, 1);
+    assert.equal(sucoGroup.items[0].containerLabel, "3 garrafas de 1 L");
+  });
+
+  it("F06: Estado vazio acolhedor no dashboard quando não há bebidas declaradas", async () => {
+    resetRateLimits();
+    // Participant registered without shared beverages
+    await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "presence",
+        name: "Visitante Sem Bebida",
+        dependentsCount: "0",
+      }),
+    );
+
+    const dashboard = await getDashboardData();
+    assert.equal(dashboard.sharedBeveragesSummary.totalLiters, 0);
+    assert.equal(dashboard.sharedBeveragesSummary.totalUnits, 0);
+    assert.equal(dashboard.sharedBeveragesSummary.groups.length, 0);
+  });
+
+  it("F06: Validação de limites — rejeição de quantidades ou volumes inválidos", async () => {
+    resetRateLimits();
+    // Quantity 0
+    const zeroQty = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "full",
+        name: "Teste Limite",
+        dependentsCount: "0",
+        sharedBeverages: JSON.stringify([
+          {
+            category: "REFRIGERANTE",
+            quantity: 0,
+            unitVolumeMl: 2000,
+          },
+        ]),
+      }),
+    );
+    assert.equal(zeroQty.status, "error");
+
+    // Quantity > 100
+    const excessQty = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "full",
+        name: "Teste Limite",
+        dependentsCount: "0",
+        sharedBeverages: JSON.stringify([
+          {
+            category: "REFRIGERANTE",
+            quantity: 101,
+            unitVolumeMl: 2000,
+          },
+        ]),
+      }),
+    );
+    assert.equal(excessQty.status, "error");
+
+    // Volume < 50 mL
+    const tooSmallVol = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "full",
+        name: "Teste Limite",
+        dependentsCount: "0",
+        sharedBeverages: JSON.stringify([
+          {
+            category: "AGUA",
+            quantity: 1,
+            unitVolumeMl: 10,
+          },
+        ]),
+      }),
+    );
+    assert.equal(tooSmallVol.status, "error");
+
+    // Volume > 10000 mL
+    const tooLargeVol = await registerOrUpdateParticipant(
+      buildFormData({
+        formScope: "full",
+        name: "Teste Limite",
+        dependentsCount: "0",
+        sharedBeverages: JSON.stringify([
+          {
+            category: "AGUA",
+            quantity: 1,
+            unitVolumeMl: 15000,
+          },
+        ]),
+      }),
+    );
+    assert.equal(tooLargeVol.status, "error");
+  });
+
+  it("F06: Funções de formatação de rótulos e volumes em litros", () => {
+    assert.equal(formatUnitVolume(200), "200 mL");
+    assert.equal(formatUnitVolume(350), "350 mL");
+    assert.equal(formatUnitVolume(500), "500 mL");
+    assert.equal(formatUnitVolume(1000), "1 L");
+    assert.equal(formatUnitVolume(1500), "1,5 L");
+    assert.equal(formatUnitVolume(2000), "2 L");
+
+    assert.equal(formatContainerLabel(1, 2000), "1 garrafa de 2 L");
+    assert.equal(formatContainerLabel(6, 2000), "6 garrafas de 2 L");
+    assert.equal(formatContainerLabel(1, 350), "1 lata de 350 mL");
+    assert.equal(formatContainerLabel(4, 350), "4 latas de 350 mL");
+    assert.equal(formatContainerLabel(1, 500), "1 garrafa de 500 mL");
+    assert.equal(formatContainerLabel(12, 500), "12 garrafas de 500 mL");
+
+    assert.equal(formatLiters(12), "12 L");
+    assert.equal(formatLiters(1.4), "1,4 L");
+    assert.equal(formatLiters(16.4), "16,4 L");
+
+    assert.equal(
+      formatBeverageItemSummary(6, 2000),
+      "6 garrafas de 2 L — 12 L",
+    );
+    assert.equal(
+      formatBeverageItemSummary(4, 350),
+      "4 latas de 350 mL — 1,4 L",
+    );
+    assert.equal(
+      formatBeverageItemSummary(2, 1000, "Chá gelado"),
+      "Chá gelado: 2 garrafas de 1 L — 2 L",
+    );
   });
 });

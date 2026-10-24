@@ -8,6 +8,7 @@ import { HeaderStats } from "@/components/HeaderStats";
 import { MyQuotaCard } from "@/components/MyQuotaCard";
 import { PixContributionCard } from "@/components/PixContributionCard";
 import { SharedTable } from "@/components/SharedTable";
+import { SharedBeveragesCard } from "@/components/SharedBeveragesCard";
 import { OurStorySection } from "@/components/OurStorySection";
 
 async function Dashboard() {
@@ -40,6 +41,8 @@ async function Dashboard() {
         items={data.items}
         totalPessoas={data.stats.totalPessoas}
       />
+
+      <SharedBeveragesCard summary={data.sharedBeveragesSummary} />
 
       <SharedTable specialDishes={data.specialDishes} />
 

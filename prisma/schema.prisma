@@ -19,6 +19,7 @@ model Participant {
   assignments     ItemAssignment[]
   specialDish     SpecialDish?
   session         ParticipantSession?
+  sharedBeverages SharedBeverage[]
 }
 
 model FoodItem {
@@ -57,4 +58,18 @@ model ParticipantSession {
   tokenHash     String      @unique
   createdAt     DateTime    @default(now())
   participant   Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+}
+
+model SharedBeverage {
+  id                String      @id @default(cuid())
+  participantId     String
+  category          String
+  customDescription String?
+  quantity          Int
+  unitVolumeMl      Int
+  createdAt         DateTime    @default(now())
+  updatedAt         DateTime    @updatedAt
+  participant       Participant @relation(fields: [participantId], references: [id], onDelete: Cascade)
+
+  @@index([participantId])
 }

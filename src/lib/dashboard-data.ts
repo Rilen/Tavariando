@@ -1,11 +1,21 @@
 import "server-only";
 import { cacheTag } from "next/cache";
-import type { DashboardData } from "@/app/actions/event";
+import type {
+  DashboardData,
+  SharedBeverageGroup,
+  SharedBeverageGroupItem,
+} from "@/app/actions/event";
 import { DASHBOARD_CACHE_TAG } from "@/lib/cache-tags";
+import {
+  BEVERAGE_CATEGORY_GROUP_LABELS,
+  formatContainerLabel,
+  formatUnitVolume,
+} from "@/lib/format";
 import { prisma } from "@/lib/prisma";
 import { getServingProfile } from "@/lib/servings";
 
 const CATEGORY_ORDER = ["COMIDA", "BEBIDA", "SOBREMESA", "DESCARTAVEL"];
+const BEVERAGE_ORDER = ["REFRIGERANTE", "SUCO", "AGUA", "OUTRA"];
 
 function emptyDashboardData(): DashboardData {
   return {
@@ -19,13 +29,22 @@ function emptyDashboardData(): DashboardData {
     items: [],
     participants: [],
     specialDishes: [],
+    sharedBeveragesSummary: {
+      totalLiters: 0,
+      totalUnits: 0,
+      groups: [],
+    },
   };
 }
 
 async function getCachedDashboardData(): Promise<DashboardData> {
   "use cache";
 
-  cacheTag(DASHBOARD_CACHE_TAG);
+  try {
+    cacheTag(DASHBOARD_CACHE_TAG);
+  } catch {
+    // Ignora quando executado fora do runtime Next.js (ex.: testes unitários)
+  }
 
   const [participants, foodItems] = await Promise.all([
     prisma.participant.findMany({
@@ -46,6 +65,15 @@ async function getCachedDashboardData(): Promise<DashboardData> {
         },
         assignments: {
           select: { foodItemId: true },
+        },
+        sharedBeverages: {
+          select: {
+            id: true,
+            category: true,
+            customDescription: true,
+            quantity: true,
+            unitVolumeMl: true,
+          },
         },
       },
     }),
@@ -161,8 +189,88 @@ async function getCachedDashboardData(): Promise<DashboardData> {
               participant.specialDish.replacesFoodItem?.name ?? null,
           }
         : null,
+      sharedBeverages: participant.sharedBeverages.map((bev) => ({
+        id: bev.id,
+        category: bev.category,
+        customDescription: bev.customDescription,
+        quantity: bev.quantity,
+        unitVolumeMl: bev.unitVolumeMl,
+      })),
     })),
     specialDishes,
+    sharedBeveragesSummary: (() => {
+      const allSharedBeverages = participants.flatMap(
+        (p) => p.sharedBeverages,
+      );
+
+      const groups: SharedBeverageGroup[] = [];
+      let totalLitersAll = 0;
+      let totalUnitsAll = 0;
+
+      for (const cat of BEVERAGE_ORDER) {
+        const matching = allSharedBeverages.filter((b) => b.category === cat);
+        if (matching.length === 0) continue;
+
+        const volumeMap = new Map<
+          number,
+          {
+            unitVolumeMl: number;
+            totalQuantity: number;
+            customDescriptions: Set<string>;
+          }
+        >();
+
+        for (const item of matching) {
+          const existing = volumeMap.get(item.unitVolumeMl) ?? {
+            unitVolumeMl: item.unitVolumeMl,
+            totalQuantity: 0,
+            customDescriptions: new Set<string>(),
+          };
+          existing.totalQuantity += item.quantity;
+          if (item.customDescription?.trim()) {
+            existing.customDescriptions.add(item.customDescription.trim());
+          }
+          volumeMap.set(item.unitVolumeMl, existing);
+          totalUnitsAll += item.quantity;
+        }
+
+        const sortedVolumes = Array.from(volumeMap.values()).sort(
+          (a, b) => b.unitVolumeMl - a.unitVolumeMl,
+        );
+
+        let categoryTotalLiters = 0;
+        const items: SharedBeverageGroupItem[] = sortedVolumes.map((entry) => {
+          const totalLiters = (entry.totalQuantity * entry.unitVolumeMl) / 1000;
+          categoryTotalLiters += totalLiters;
+          return {
+            unitVolumeMl: entry.unitVolumeMl,
+            formattedUnitVolume: formatUnitVolume(entry.unitVolumeMl),
+            totalQuantity: entry.totalQuantity,
+            totalLiters,
+            containerLabel: formatContainerLabel(
+              entry.totalQuantity,
+              entry.unitVolumeMl,
+            ),
+            customDescriptions: Array.from(entry.customDescriptions),
+          };
+        });
+
+        totalLitersAll += categoryTotalLiters;
+
+        groups.push({
+          category: cat,
+          categoryLabel: BEVERAGE_CATEGORY_GROUP_LABELS[cat] ?? cat,
+          totalLiters: categoryTotalLiters,
+          items,
+        });
+      }
+
+      return {
+        totalLiters: totalLitersAll,
+        totalUnits: totalUnitsAll,
+        groups,
+      };
+    })(),
   };
 }
 

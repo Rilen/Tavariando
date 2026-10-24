@@ -17,6 +17,7 @@ import {
   participantIdSchema,
   participantInputSchema,
   sessionTokenSchema,
+  type SharedBeverageItemInput,
 } from "@/lib/validation";
 
 
@@ -79,6 +80,36 @@ export type SpecialDishSummary = {
   replacesItemName: string | null;
 };
 
+export type DashboardSharedBeverage = {
+  id: string;
+  category: string;
+  customDescription: string | null;
+  quantity: number;
+  unitVolumeMl: number;
+};
+
+export type SharedBeverageGroupItem = {
+  unitVolumeMl: number;
+  formattedUnitVolume: string;
+  totalQuantity: number;
+  totalLiters: number;
+  containerLabel: string;
+  customDescriptions: string[];
+};
+
+export type SharedBeverageGroup = {
+  category: string;
+  categoryLabel: string;
+  totalLiters: number;
+  items: SharedBeverageGroupItem[];
+};
+
+export type DashboardSharedBeveragesSummary = {
+  totalLiters: number;
+  totalUnits: number;
+  groups: SharedBeverageGroup[];
+};
+
 export type DashboardParticipant = {
   id: string;
   name: string;
@@ -91,6 +122,7 @@ export type DashboardParticipant = {
     replacesItemId: string | null;
     replacesItemName: string | null;
   } | null;
+  sharedBeverages: DashboardSharedBeverage[];
 };
 
 export type DashboardData = {
@@ -104,6 +136,7 @@ export type DashboardData = {
   items: DashboardItem[];
   participants: DashboardParticipant[];
   specialDishes: SpecialDishSummary[];
+  sharedBeveragesSummary: DashboardSharedBeveragesSummary;
 };
 
 export type ActionState = {
@@ -150,6 +183,7 @@ export async function registerOrUpdateParticipant(
   let specialDishDescription = "";
   let specialDishReplacesItemId: string | null = null;
   let selectedFoodItemIds: string[] = [];
+  let sharedBeverages: SharedBeverageItemInput[] = [];
 
   if (formScope === "contribution") {
     const parsedContribution = contributionInputSchema.safeParse({
@@ -160,6 +194,7 @@ export async function registerOrUpdateParticipant(
       specialDishReplacesItemId:
         getFormString(formData, "specialDishReplacesItemId").trim() || null,
       selectedFoodItemIds: getFormStringArray(formData, "selectedFoodItemIds"),
+      sharedBeverages: getFormString(formData, "sharedBeverages") || [],
     });
 
     if (!parsedContribution.success) {
@@ -175,6 +210,7 @@ export async function registerOrUpdateParticipant(
     specialDishReplacesItemId =
       parsedContribution.data.specialDishReplacesItemId;
     selectedFoodItemIds = parsedContribution.data.selectedFoodItemIds;
+    sharedBeverages = parsedContribution.data.sharedBeverages;
   } else {
     const parsed = participantInputSchema.safeParse({
       name: getFormString(formData, "name"),
@@ -190,6 +226,7 @@ export async function registerOrUpdateParticipant(
       specialDishReplacesItemId:
         getFormString(formData, "specialDishReplacesItemId").trim() || null,
       selectedFoodItemIds: getFormStringArray(formData, "selectedFoodItemIds"),
+      sharedBeverages: getFormString(formData, "sharedBeverages") || [],
     });
 
     if (!parsed.success) {
@@ -205,6 +242,7 @@ export async function registerOrUpdateParticipant(
     specialDishDescription = parsed.data.specialDishDescription;
     specialDishReplacesItemId = parsed.data.specialDishReplacesItemId;
     selectedFoodItemIds = parsed.data.selectedFoodItemIds;
+    sharedBeverages = parsed.data.sharedBeverages;
   }
 
   const effectiveSelectedFoodItemIds = specialDishReplacesItemId
@@ -318,11 +356,14 @@ export async function registerOrUpdateParticipant(
         });
       }
 
+      const hasBeverageField = formData.has("sharedBeverages");
       const shouldUpdateContributions =
         formScope !== "presence" ||
         !isEditingExisting ||
         effectiveSelectedFoodItemIds.length > 0 ||
-        Boolean(specialDishDescription);
+        Boolean(specialDishDescription) ||
+        sharedBeverages.length > 0 ||
+        hasBeverageField;
 
       if (shouldUpdateContributions) {
         const validItems = effectiveSelectedFoodItemIds.length
@@ -408,6 +449,22 @@ export async function registerOrUpdateParticipant(
             where: { participantId: savedParticipant.id },
           });
         }
+
+        await tx.sharedBeverage.deleteMany({
+          where: { participantId: savedParticipant.id },
+        });
+
+        if (sharedBeverages.length > 0) {
+          await tx.sharedBeverage.createMany({
+            data: sharedBeverages.map((bev) => ({
+              participantId: savedParticipant.id,
+              category: bev.category,
+              customDescription: bev.customDescription?.trim() || null,
+              quantity: bev.quantity,
+              unitVolumeMl: bev.unitVolumeMl,
+            })),
+          });
+        }
       }
 
       const sessionToken = generateSessionToken();
@@ -434,7 +491,8 @@ export async function registerOrUpdateParticipant(
 
     const hasChosenContribution =
       effectiveSelectedFoodItemIds.length > 0 ||
-      Boolean(specialDishDescription);
+      Boolean(specialDishDescription) ||
+      sharedBeverages.length > 0;
 
     const message =
       formScope === "contribution"
@@ -527,6 +585,9 @@ export async function cancelParticipation(
         where: { participantId: parsedId.data },
       });
       await tx.specialDish.deleteMany({
+        where: { participantId: parsedId.data },
+      });
+      await tx.sharedBeverage.deleteMany({
         where: { participantId: parsedId.data },
       });
       await tx.participantSession.deleteMany({
