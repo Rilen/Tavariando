@@ -1,6 +1,6 @@
 "use client";
 
-import { useActionState, useEffect, useRef, useState } from "react";
+import { useActionState, useEffect, useRef, useState, useSyncExternalStore } from "react";
 import {
   AlertCircle,
   ArrowRight,
@@ -108,6 +108,12 @@ export function ConfirmationForm({
 
   const session = useParticipantSession();
 
+  const mounted = useSyncExternalStore(
+    () => () => {},
+    () => true,
+    () => false,
+  );
+
   const [dismissedState, setDismissedState] = useState<ActionState | null>(
     null,
   );
@@ -120,7 +126,13 @@ export function ConfirmationForm({
     ? participants.find((item) => item.id === session.participantId)
     : undefined;
 
-  const isConfirmedParticipant = Boolean(activeParticipant);
+  const isConfirmedParticipant =
+    Boolean(activeParticipant) ||
+    Boolean(session?.participantId) ||
+    Boolean(
+      activeActionState.status === "success" &&
+        activeActionState.participantId,
+    );
 
   const hasStaleSession = Boolean(
     session !== undefined &&
@@ -130,7 +142,6 @@ export function ConfirmationForm({
   );
 
   const [activeStep, setActiveStep] = useState<ParticipantStep>("presence");
-  const [includeItemsInStep1, setIncludeItemsInStep1] = useState(false);
   const [categoryFilter, setCategoryFilter] =
     useState<ItemCategoryFilter>("TODOS");
 
@@ -184,7 +195,10 @@ export function ConfirmationForm({
       if (previousSignature === "init") {
         setActiveStep("contribution");
       }
-    } else if (previousSignature !== "init") {
+    } else if (
+      previousSignature !== "init" &&
+      previousSignature !== "visitor"
+    ) {
       setDismissedState(state);
       setName("");
       setPhone("");
@@ -197,16 +211,12 @@ export function ConfirmationForm({
       setShowSpecialDishFields(false);
       setBringsSharedBeverages(false);
       setSharedBeverages([]);
-      setIncludeItemsInStep1(false);
       setActiveStep("presence");
     }
   }
 
   if (state !== lastHandledState) {
     setLastHandledState(state);
-    if (state.status === "success" && state.stepCompleted === "presence") {
-      setActiveStep("contribution");
-    }
   }
 
   const clearPhoneFlag =
@@ -285,7 +295,11 @@ export function ConfirmationForm({
     setActiveStep("presence");
   }
 
-  const effectiveParticipantId = activeParticipant ? activeParticipant.id : "";
+  const effectiveParticipantId =
+    activeParticipant?.id ??
+    (activeActionState.status === "success" && activeActionState.participantId
+      ? activeActionState.participantId
+      : "");
   const effectiveParticipantToken = effectiveParticipantId
     ? (session?.participantToken ??
       (activeActionState.status === "success" &&
@@ -322,12 +336,7 @@ export function ConfirmationForm({
     ? activeStep
     : "presence";
 
-  const formScope =
-    currentStep === "contribution"
-      ? "contribution"
-      : includeItemsInStep1 && !isConfirmedParticipant
-        ? "full"
-        : "presence";
+  const formScope = currentStep === "contribution" ? "contribution" : "presence";
 
   function handleAddBeverage() {
     setSharedBeverages((prev) => [
@@ -398,14 +407,13 @@ export function ConfirmationForm({
             >
               <Check className="size-3.5" />
             </span>
-            <span className="flex-1">
-              <span className="flex items-center gap-2 text-sm font-bold text-orange-950">
-                <Wine className="size-4 text-orange-700" aria-hidden="true" />
-                Vou levar bebidas para compartilhar com a família
+            <span className="min-w-0 flex-1">
+              <span className="flex flex-wrap items-center gap-2 text-sm font-bold text-orange-950">
+                <Wine className="size-4 shrink-0 text-orange-700" aria-hidden="true" />
+                <span>Vou levar bebidas para compartilhar</span>
               </span>
               <span className="mt-0.5 block text-xs leading-relaxed text-stone-600">
-                Opcional. Adicione refrigerantes, sucos ou águas para somar à
-                mesa comum.
+                Opcional. Adicione refrigerantes, sucos ou águas para a mesa comum.
               </span>
             </span>
           </label>
@@ -684,7 +692,7 @@ export function ConfirmationForm({
                     type="button"
                     onClick={() => setCategoryFilter(tab.id)}
                     aria-pressed={isActive}
-                    className={`min-h-9 rounded-full px-3.5 py-1.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-700 focus-visible:ring-offset-1 ${
+                    className={`min-h-10 rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-700 focus-visible:ring-offset-1 ${
                       isActive
                         ? "bg-orange-800 text-white shadow-sm"
                         : "border border-orange-200 bg-orange-50/70 text-stone-800 hover:bg-orange-100"
@@ -804,7 +812,7 @@ export function ConfirmationForm({
 
                   <div className="flex flex-wrap items-center justify-between gap-1.5 border-t border-orange-100/80 pt-2.5">
                     <span
-                      className={`rounded-full px-2.5 py-0.5 text-[11px] font-semibold ${
+                      className={`rounded-full px-2.5 py-0.5 text-xs font-semibold ${
                         CATEGORY_STYLES[item.category] ??
                         "bg-orange-100 text-stone-800"
                       }`}
@@ -813,7 +821,7 @@ export function ConfirmationForm({
                     </span>
 
                     <span
-                      className={`rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${statusBadge.className}`}
+                      className={`rounded-full border px-2.5 py-0.5 text-xs font-semibold ${statusBadge.className}`}
                     >
                       {statusBadge.label}
                     </span>
@@ -952,6 +960,7 @@ export function ConfirmationForm({
   return (
     <section
       id="confirmacao"
+      data-hydrated={mounted ? "true" : "false"}
       aria-labelledby="confirmacao-heading"
       className="scroll-mt-6 rounded-3xl border border-orange-200/80 bg-white p-5 shadow-sm shadow-orange-950/5 sm:p-7"
     >
@@ -1017,76 +1026,73 @@ export function ConfirmationForm({
           </div>
         </div>
 
-        <div
-          role="tablist"
-          aria-label="Etapas da confirmação"
-          className="grid grid-cols-2 gap-2 rounded-2xl bg-orange-50/90 p-1.5"
-        >
-          <button
-            type="button"
-            role="tab"
-            aria-selected={currentStep === "presence"}
-            onClick={() => setActiveStep("presence")}
-            className={`flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition sm:text-sm ${
-              currentStep === "presence"
-                ? "bg-white text-orange-950 shadow-sm ring-1 ring-orange-200"
-                : "text-stone-700 hover:bg-white/60 hover:text-orange-950"
-            }`}
+        {!isConfirmedParticipant ? (
+          <div className="flex items-center gap-3 rounded-2xl border border-orange-200/80 bg-orange-50/70 p-3.5 text-xs text-stone-800 sm:text-sm">
+            <span className="flex size-7 shrink-0 items-center justify-center rounded-full bg-orange-800 text-xs font-bold text-white shadow-2xs">
+              1
+            </span>
+            <div className="space-y-0.5">
+              <p className="font-bold text-orange-950">
+                Passo 1: Confirmação de presença
+              </p>
+              <p className="text-xs text-stone-600">
+                Avise seu nome e quem vem com você. A escolha de prato ou bebida é opcional e você poderá fazer depois com calma.
+              </p>
+            </div>
+          </div>
+        ) : (
+          <div
+            role="tablist"
+            aria-label="Etapas da confirmação"
+            className="grid grid-cols-2 gap-2 rounded-2xl bg-orange-50/90 p-1.5"
           >
-            <span
-              className={`flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
-                isConfirmedParticipant
-                  ? "bg-emerald-600 text-white"
-                  : currentStep === "presence"
-                    ? "bg-orange-800 text-white"
-                    : "bg-orange-200 text-orange-950"
+            <button
+              type="button"
+              role="tab"
+              aria-selected={currentStep === "presence"}
+              onClick={() => setActiveStep("presence")}
+              className={`flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition sm:text-sm ${
+                currentStep === "presence"
+                  ? "bg-white text-orange-950 shadow-sm ring-1 ring-orange-200"
+                  : "text-stone-700 hover:bg-white/60 hover:text-orange-950"
               }`}
             >
-              {isConfirmedParticipant ? (
+              <span className="flex size-5 shrink-0 items-center justify-center rounded-full bg-emerald-600 text-white text-xs font-bold">
                 <Check className="size-3" aria-hidden="true" />
-              ) : (
-                "1"
-              )}
-            </span>
-            <span className="truncate">
-              {isConfirmedParticipant
-                ? "Presença confirmada"
-                : "Confirmar presença"}
-            </span>
-          </button>
+              </span>
+              <span className="truncate">Minha presença</span>
+            </button>
 
-          <button
-            type="button"
-            role="tab"
-            aria-selected={currentStep === "contribution"}
-            disabled={!isConfirmedParticipant}
-            onClick={() => setActiveStep("contribution")}
-            className={`flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition sm:text-sm ${
-              currentStep === "contribution"
-                ? "bg-white text-orange-950 shadow-sm ring-1 ring-orange-200"
-                : isConfirmedParticipant
-                  ? "text-stone-700 hover:bg-white/60 hover:text-orange-950"
-                  : "cursor-not-allowed text-stone-400"
-            }`}
-          >
-            <span
-              className={`flex size-5 shrink-0 items-center justify-center rounded-full text-[11px] font-bold ${
-                hasCurrentContribution && isConfirmedParticipant
-                  ? "bg-emerald-600 text-white"
-                  : currentStep === "contribution"
-                    ? "bg-orange-800 text-white"
-                    : "bg-orange-200/70 text-stone-700"
+            <button
+              type="button"
+              role="tab"
+              aria-selected={currentStep === "contribution"}
+              onClick={() => setActiveStep("contribution")}
+              className={`flex min-h-11 items-center justify-center gap-2 rounded-xl px-3 py-2 text-xs font-bold transition sm:text-sm ${
+                currentStep === "contribution"
+                  ? "bg-white text-orange-950 shadow-sm ring-1 ring-orange-200"
+                  : "text-stone-700 hover:bg-white/60 hover:text-orange-950"
               }`}
             >
-              {hasCurrentContribution && isConfirmedParticipant ? (
-                <Check className="size-3" aria-hidden="true" />
-              ) : (
-                "2"
-              )}
-            </span>
-            <span className="truncate">Escolher o que levar</span>
-          </button>
-        </div>
+              <span
+                className={`flex size-5 shrink-0 items-center justify-center rounded-full text-xs font-bold ${
+                  hasCurrentContribution
+                    ? "bg-emerald-600 text-white"
+                    : currentStep === "contribution"
+                      ? "bg-orange-800 text-white"
+                      : "bg-orange-200 text-orange-950"
+                }`}
+              >
+                {hasCurrentContribution ? (
+                  <Check className="size-3" aria-hidden="true" />
+                ) : (
+                  "2"
+                )}
+              </span>
+              <span className="truncate">Escolher o que levar</span>
+            </button>
+          </div>
+        )}
       </div>
 
       {activeActionState.status !== "idle" && (
@@ -1123,20 +1129,41 @@ export function ConfirmationForm({
 
               {activeActionState.status === "success" &&
                 isConfirmedParticipant && (
-                  <p className="text-xs text-emerald-900">
-                    Resumo: <strong>{activeParticipant?.name ?? name}</strong> ·{" "}
-                    <strong>
-                      {pluralize(
-                        activeParticipant?.peopleCount ?? totalGroupPeople,
-                        "pessoa confirmada",
-                        "pessoas confirmadas",
-                      )}
-                    </strong>
-                    {selectedFoodItemIds.length > 0
-                      ? ` · ${pluralize(selectedFoodItemIds.length, "item assumido", "itens assumidos")}`
-                      : " · nenhum prato assumido ainda (opcional)"}
-                    .
-                  </p>
+                  <div className="space-y-3">
+                    <p className="text-xs text-emerald-900 sm:text-sm">
+                      Resumo: <strong>{activeParticipant?.name ?? name}</strong> ·{" "}
+                      <strong>
+                        {pluralize(
+                          activeParticipant?.peopleCount ?? totalGroupPeople,
+                          "pessoa confirmada",
+                          "pessoas confirmadas",
+                        )}
+                      </strong>
+                      {selectedFoodItemIds.length > 0
+                        ? ` · ${pluralize(selectedFoodItemIds.length, "item assumido", "itens assumidos")}`
+                        : " · nenhum prato assumido ainda (opcional)"}
+                      .
+                    </p>
+
+                    <div className="flex flex-wrap items-center gap-2 pt-1">
+                      <button
+                        type="button"
+                        onClick={() => setActiveStep("contribution")}
+                        className="inline-flex min-h-11 items-center justify-center gap-2 rounded-xl bg-emerald-800 px-4 py-2.5 text-xs font-bold text-white shadow-sm transition hover:bg-emerald-900 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 sm:text-sm"
+                      >
+                        <Utensils className="size-4" aria-hidden="true" />
+                        {hasCurrentContribution
+                          ? "Ver / alterar o que vou levar"
+                          : "Escolher o que levar no almoço (opcional)"}
+                      </button>
+                      <a
+                        href="#minha-participacao"
+                        className="inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl border border-emerald-400 bg-white px-4 py-2.5 text-xs font-bold text-emerald-900 shadow-2xs transition hover:bg-emerald-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700 sm:text-sm"
+                      >
+                        Ver meu resumo à mesa
+                      </a>
+                    </div>
+                  </div>
                 )}
 
               {activeActionState.status === "error" &&
@@ -1238,7 +1265,7 @@ export function ConfirmationForm({
               </div>
             </div>
 
-            <fieldset className="space-y-4 rounded-2xl border border-orange-200/80 bg-orange-50/40 p-4 sm:p-5">
+            <fieldset className="min-w-0 w-full space-y-4 rounded-2xl border border-orange-200/80 bg-orange-50/40 p-4 sm:p-5">
               <div className="space-y-1">
                 <legend className="text-sm font-bold text-orange-950 sm:text-base">
                   Quantos acompanhantes vêm com você?
@@ -1251,29 +1278,29 @@ export function ConfirmationForm({
               {/* Distinction breakdown card */}
               <div
                 aria-live="polite"
-                className="grid grid-cols-3 gap-2 rounded-xl border border-orange-200/80 bg-white/90 p-2.5 text-center shadow-xs"
+                className="grid grid-cols-3 gap-1.5 sm:gap-2 min-w-0 rounded-xl border border-orange-200/80 bg-white/90 p-2 sm:p-2.5 text-center shadow-xs"
               >
-                <div className="rounded-lg bg-orange-50/80 px-2 py-1.5">
-                  <span className="block text-[11px] font-semibold text-stone-500 uppercase tracking-wider">
+                <div className="min-w-0 rounded-lg bg-orange-50/80 px-1.5 py-1.5 sm:px-2">
+                  <span className="block text-[11px] sm:text-xs font-semibold text-stone-600 uppercase tracking-tight">
                     Titular
                   </span>
-                  <span className="block text-sm font-bold text-orange-950">
+                  <span className="block text-xs sm:text-sm font-bold text-orange-950 truncate">
                     Você (1)
                   </span>
                 </div>
-                <div className="rounded-lg bg-orange-50/80 px-2 py-1.5">
-                  <span className="block text-[11px] font-semibold text-stone-500 uppercase tracking-wider">
-                    Acompanhantes
+                <div className="min-w-0 rounded-lg bg-orange-50/80 px-1.5 py-1.5 sm:px-2">
+                  <span className="block text-[11px] sm:text-xs font-semibold text-stone-600 uppercase tracking-tight">
+                    Família
                   </span>
-                  <span className="block text-sm font-bold text-orange-950">
+                  <span className="block text-xs sm:text-sm font-bold text-orange-950 truncate">
                     +{dependentsCount}
                   </span>
                 </div>
-                <div className="rounded-lg bg-orange-800 px-2 py-1.5 text-white shadow-xs">
-                  <span className="block text-[11px] font-semibold text-orange-100 uppercase tracking-wider">
-                    Total à mesa
+                <div className="min-w-0 rounded-lg bg-orange-800 px-1.5 py-1.5 sm:px-2 text-white shadow-xs">
+                  <span className="block text-[11px] sm:text-xs font-semibold text-orange-100 uppercase tracking-tight">
+                    À mesa
                   </span>
-                  <span className="block text-sm font-extrabold text-white">
+                  <span className="block text-xs sm:text-sm font-extrabold text-white truncate">
                     {pluralize(totalGroupPeople, "pessoa", "pessoas")}
                   </span>
                 </div>
@@ -1305,7 +1332,7 @@ export function ConfirmationForm({
                           onChange={() => setDependentsCount(option)}
                           className="sr-only"
                         />
-                        {option === 0 ? "Só eu (0)" : `+${option}`}
+                        {option === 0 ? "Só eu" : `+${option}`}
                       </label>
                     );
                   })}
@@ -1318,19 +1345,19 @@ export function ConfirmationForm({
                 value={dependentsCount}
               />
 
-              {/* Fine tuning / more than 5 */}
-              <div className="flex flex-col gap-2 rounded-xl border border-orange-200/70 bg-white/70 p-3 sm:flex-row sm:items-center sm:justify-between">
-                <span className="text-xs text-stone-700 font-medium">
+              {/* Other count / more than 5 */}
+              <div className="flex flex-col gap-2.5 rounded-xl border border-orange-200/70 bg-white/70 p-3 sm:flex-row sm:items-center sm:justify-between min-w-0">
+                <span className="text-xs text-stone-700 font-medium leading-relaxed">
                   {dependentsCount === 0
                     ? "Você vem sozinho(a) — 1 lugar à mesa."
                     : `Você + ${pluralize(dependentsCount, "acompanhante", "acompanhantes")} = ${pluralize(totalGroupPeople, "pessoa", "pessoas")} à mesa.`}
                 </span>
 
-                <div className="flex items-center justify-between gap-3 sm:justify-end">
+                <div className="flex flex-wrap items-center justify-between gap-2 sm:justify-end min-w-0">
                   <span className="text-xs font-semibold text-stone-700">
-                    Ajuste fino (ou mais de 5):
+                    Outra quantidade:
                   </span>
-                  <div className="flex items-center gap-1.5">
+                  <div className="flex items-center gap-1.5 shrink-0">
                     <button
                       type="button"
                       aria-label="Diminuir um acompanhante"
@@ -1376,44 +1403,11 @@ export function ConfirmationForm({
               value={bringsOwnDrink ? "true" : "false"}
             />
 
-            {!isConfirmedParticipant && (
-              <div className="rounded-2xl border border-orange-200/70 bg-orange-50/30 p-4">
-                <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                  <div>
-                    <p className="text-sm font-bold text-orange-950">
-                      Quer escolher um prato agora ou depois?
-                    </p>
-                    <p className="text-xs text-stone-600">
-                      Você pode confirmar apenas sua presença agora e escolher o
-                      prato na etapa seguinte.
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => setIncludeItemsInStep1((prev) => !prev)}
-                    aria-expanded={includeItemsInStep1}
-                    className="inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 self-start rounded-xl border border-orange-300 bg-white px-3.5 py-2 text-xs font-bold text-orange-900 transition hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-700 sm:self-auto"
-                  >
-                    <Utensils className="size-3.5" aria-hidden="true" />
-                    {includeItemsInStep1
-                      ? "Confirmar só presença primeiro"
-                      : "Já quero escolher o que levar"}
-                  </button>
-                </div>
-
-                {includeItemsInStep1 && (
-                  <div className="mt-5 border-t border-orange-200/70 pt-5">
-                    {renderItemSelectorSection()}
-                  </div>
-                )}
-              </div>
-            )}
-
             <div className="flex flex-col gap-3 border-t border-orange-100 pt-4 sm:flex-row sm:items-center sm:justify-between">
               <p className="text-xs leading-relaxed text-stone-600">
                 {isConfirmedParticipant
                   ? "Seus pratos já escolhidos são preservados ao salvar seus dados."
-                  : "Após confirmar presença, você poderá ver e escolher o que levar com calma."}
+                  : "Após confirmar presença, você poderá escolher o que levar com calma quando quiser."}
               </p>
 
               <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
@@ -1446,9 +1440,7 @@ export function ConfirmationForm({
                       <CheckCircle2 className="size-4" aria-hidden="true" />
                       {isConfirmedParticipant
                         ? "Salvar dados de presença"
-                        : includeItemsInStep1 && hasCurrentContribution
-                          ? "Confirmar presença e contribuição"
-                          : "Confirmar minha presença"}
+                        : "Confirmar minha presença"}
                     </>
                   )}
                 </button>
@@ -1497,28 +1489,38 @@ export function ConfirmationForm({
                 </a>
               </div>
 
-              <button
-                type="submit"
-                disabled={isPending}
-                className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-orange-700 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-orange-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-700 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
-              >
-                {isPending ? (
-                  <>
-                    <Loader2
-                      className="size-4 animate-spin"
-                      aria-hidden="true"
-                    />
-                    Salvando...
-                  </>
-                ) : (
-                  <>
-                    <CheckCircle2 className="size-4" aria-hidden="true" />
-                    {hasCurrentContribution
-                      ? "Salvar minha contribuição"
-                      : "Continuar sem assumir prato agora"}
-                  </>
-                )}
-              </button>
+              <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+                <button
+                  type="button"
+                  onClick={() => setActiveStep("presence")}
+                  className="inline-flex min-h-12 items-center justify-center gap-2 rounded-xl border border-orange-300 bg-white px-4 py-3 text-sm font-bold text-orange-900 transition hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-700"
+                >
+                  Voltar para meus dados
+                </button>
+
+                <button
+                  type="submit"
+                  disabled={isPending}
+                  className="inline-flex min-h-12 w-full items-center justify-center gap-2 rounded-xl bg-orange-700 px-6 py-3 text-sm font-bold text-white shadow-sm transition hover:bg-orange-800 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-700 focus-visible:ring-offset-2 disabled:cursor-not-allowed disabled:opacity-70 sm:w-auto"
+                >
+                  {isPending ? (
+                    <>
+                      <Loader2
+                        className="size-4 animate-spin"
+                        aria-hidden="true"
+                      />
+                      Salvando...
+                    </>
+                  ) : (
+                    <>
+                      <CheckCircle2 className="size-4" aria-hidden="true" />
+                      {hasCurrentContribution
+                        ? "Salvar minha contribuição"
+                        : "Continuar sem assumir prato"}
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         )}

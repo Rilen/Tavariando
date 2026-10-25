@@ -35,15 +35,11 @@ export function HeaderStats({ stats, participants = [] }: HeaderStatsProps) {
   const hasConfirmations = stats.totalConfirmados > 0;
 
   return (
-    <header className="relative overflow-hidden rounded-3xl border border-orange-900/15 bg-gradient-to-br from-orange-800 via-orange-700 to-amber-700 px-5 py-6 text-white shadow-lg shadow-orange-950/15 sm:px-8 sm:py-9 lg:px-10">
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -right-16 -top-20 size-64 rounded-full bg-white/10 blur-2xl"
-      />
-      <div
-        aria-hidden="true"
-        className="pointer-events-none absolute -bottom-24 left-1/3 size-56 rounded-full bg-amber-300/15 blur-3xl"
-      />
+    <header className="relative overflow-hidden isolate rounded-3xl border border-orange-900/15 bg-gradient-to-br from-orange-800 via-orange-700 to-amber-700 px-5 py-6 text-white shadow-lg shadow-orange-950/15 sm:px-8 sm:py-9 lg:px-10">
+      <div aria-hidden="true" className="pointer-events-none absolute inset-0 overflow-hidden">
+        <div className="absolute -right-16 -top-20 h-64 w-64 max-w-full rounded-full bg-white/10 blur-2xl" />
+        <div className="absolute -bottom-24 left-1/4 h-56 w-56 max-w-full rounded-full bg-amber-300/15 blur-3xl" />
+      </div>
 
       <div className="relative z-10 flex flex-col gap-6 md:flex-row md:items-center md:justify-between md:gap-8 lg:gap-10">
         <div className="flex-1 space-y-6">
@@ -62,9 +58,9 @@ export function HeaderStats({ stats, participants = [] }: HeaderStatsProps) {
             </div>
 
             <div className="space-y-1">
-              <span className="inline-flex items-center gap-1.5 rounded-full border border-white/20 bg-white/15 px-3 py-1 text-xs font-semibold tracking-wide text-white backdrop-blur-sm">
-                <Heart className="size-3.5 fill-amber-200 text-amber-200" aria-hidden="true" />
-                Encontro da Família Tavares · Tavariando
+              <span className="inline-flex flex-wrap items-center gap-1.5 rounded-2xl sm:rounded-full border border-white/20 bg-white/15 px-3 py-1 text-xs font-semibold tracking-wide text-white backdrop-blur-sm">
+                <Heart className="size-3.5 shrink-0 fill-amber-200 text-amber-200" aria-hidden="true" />
+                <span>Encontro da Família Tavares · Tavariando</span>
               </span>
               <p className="text-xs font-medium text-amber-100 md:hidden">
                 Homenagem a Hermínio &amp; Evangelina

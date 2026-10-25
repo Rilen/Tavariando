@@ -4,7 +4,6 @@ import { useState } from "react";
 import {
   AlertTriangle,
   CheckCircle2,
-  Clock,
   Edit3,
   HeartHandshake,
   ListChecks,
@@ -185,11 +184,11 @@ export function MyQuotaCard({
                 </>
               ) : (
                 <>
-                  <Clock
+                  <CheckCircle2
                     className="size-3.5 text-amber-200"
                     aria-hidden="true"
                   />
-                  Presença confirmada · Prato em aberto
+                  Presença confirmada · Almoço em família
                 </>
               )}
             </span>
@@ -320,19 +319,20 @@ export function MyQuotaCard({
         ) : (
           <div className="rounded-2xl border border-amber-200/35 bg-black/20 p-4 backdrop-blur-sm">
             <p className="text-sm font-bold text-white">
-              Contribuição no cardápio pendente (opcional)
+              Quer levar algum prato ou sobremesa? (Totalmente opcional)
             </p>
             <p className="mt-1 text-xs leading-relaxed text-orange-50">
-              Sua presença já está garantida! Quando quiser, escolha um item do
-              cardápio ou registre um prato adicional para ajudar na divisão.
+              Sua presença já está garantida e confirmada à mesa! Se quiser levar
+              uma travessa ou doce para somar com a família, você pode escolher
+              quando quiser.
             </p>
             <a
               href="#confirmacao"
               onClick={() => requestParticipantStep("contribution")}
-              className="mt-3 inline-flex min-h-10 items-center justify-center gap-1.5 rounded-xl bg-white px-4 py-2 text-xs font-bold text-orange-900 shadow-sm transition hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
+              className="mt-3 inline-flex min-h-11 items-center justify-center gap-1.5 rounded-xl bg-white px-4 py-2.5 text-xs font-bold text-orange-900 shadow-sm transition hover:bg-orange-50 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-white"
             >
               <PlusCircle className="size-4" aria-hidden="true" />
-              Escolher o que levar
+              Escolher um prato (opcional)
             </a>
           </div>
         )}

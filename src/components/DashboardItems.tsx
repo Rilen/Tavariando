@@ -115,7 +115,7 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                   type="button"
                   onClick={() => setSelectedCategory(filter.id)}
                   aria-pressed={isActive}
-                  className={`min-h-9 rounded-full px-3.5 py-1.5 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-700 focus-visible:ring-offset-1 ${
+                  className={`min-h-10 rounded-full px-4 py-2 text-xs font-semibold transition focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-700 focus-visible:ring-offset-1 ${
                     isActive
                       ? "bg-orange-800 text-white shadow-sm"
                       : "border border-orange-200 bg-orange-50/70 text-stone-800 hover:bg-orange-100"
@@ -264,14 +264,14 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                                 {item.name}
                               </h4>
                               {isConfirmedWithoutVolunteers && (
-                                <span className="inline-flex items-center rounded-md border border-amber-300/80 bg-amber-100/90 px-1.5 py-0.5 text-[10px] font-bold text-amber-950">
+                                <span className="inline-flex items-center rounded-md border border-amber-300/80 bg-amber-100/90 px-2 py-0.5 text-xs font-bold text-amber-950">
                                   Sem voluntário
                                 </span>
                               )}
                             </div>
 
                             <span
-                              className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-0.5 text-[11px] font-semibold ${stateBadge.className}`}
+                              className={`inline-flex shrink-0 items-center gap-1 rounded-full border px-2.5 py-0.5 text-xs font-semibold ${stateBadge.className}`}
                             >
                               {isSufficientCoverage ? (
                                 <CheckCircle2
@@ -301,7 +301,7 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                         <div className="flex flex-wrap items-center justify-between gap-2 border-t border-orange-100/90 pt-3">
                           {item.volunteers.length > 0 ? (
                             <div className="flex flex-wrap items-center gap-1.5">
-                              <span className="inline-flex items-center gap-1 text-[11px] font-semibold text-stone-600">
+                              <span className="inline-flex items-center gap-1 text-xs font-semibold text-stone-600">
                                 <Users
                                   className="size-3.5"
                                   aria-hidden="true"
@@ -315,7 +315,7 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                                 {item.volunteers.map((volunteer) => (
                                   <li
                                     key={volunteer.participantId}
-                                    className="rounded-lg border border-orange-200 bg-white px-2 py-0.5 text-[11px] font-semibold text-orange-950"
+                                    className="rounded-lg border border-orange-200 bg-white px-2 py-0.5 text-xs font-semibold text-orange-950"
                                   >
                                     {volunteer.name}
                                   </li>
@@ -323,7 +323,7 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                               </ul>
                             </div>
                           ) : (
-                            <span className="text-[11px] text-stone-600">
+                            <span className="text-xs text-stone-600">
                               {hasConfirmations
                                 ? "Aguardando primeiro voluntário"
                                 : "Disponível para escolha"}
@@ -331,7 +331,7 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                           )}
 
                           {isUnavailableForNewChoice ? (
-                            <span className="inline-flex items-center gap-1 rounded-lg bg-stone-200/80 px-2.5 py-1 text-[11px] font-semibold text-stone-700">
+                            <span className="inline-flex items-center gap-1 rounded-xl bg-stone-200/80 px-3 py-1.5 text-xs font-semibold text-stone-700">
                               <Lock className="size-3" aria-hidden="true" />
                               Indisponível para nova escolha
                             </span>
@@ -339,10 +339,10 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                             <a
                               href="#confirmacao"
                               onClick={handleSelectAction}
-                              className="inline-flex items-center gap-1 rounded-lg bg-emerald-100 px-2.5 py-1 text-[11px] font-bold text-emerald-900 transition hover:bg-emerald-200"
+                              className="inline-flex min-h-10 items-center gap-1.5 rounded-xl bg-emerald-100 px-3.5 py-2 text-xs font-bold text-emerald-900 transition hover:bg-emerald-200 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-emerald-700"
                             >
                               <CheckCircle2
-                                className="size-3"
+                                className="size-3.5"
                                 aria-hidden="true"
                               />
                               Assumido por você · Editar
@@ -351,11 +351,11 @@ export function DashboardItems({ items, totalPessoas }: DashboardItemsProps) {
                             <a
                               href="#confirmacao"
                               onClick={handleSelectAction}
-                              className="inline-flex items-center gap-1 rounded-lg border border-orange-300 bg-white px-2.5 py-1 text-[11px] font-bold text-orange-900 transition hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-700"
+                              className="inline-flex min-h-10 items-center gap-1.5 rounded-xl border border-orange-300 bg-white px-3.5 py-2 text-xs font-bold text-orange-900 shadow-2xs transition hover:bg-orange-100 focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-orange-700"
                             >
                               Quero levar
                               <ArrowUpRight
-                                className="size-3"
+                                className="size-3.5"
                                 aria-hidden="true"
                               />
                             </a>
